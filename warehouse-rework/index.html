@@ -319,6 +319,40 @@
       padding: 5px 6px;
     }
 
+    /* 拆检工时自动计算格 */
+    tbody td[data-col="spent"] {
+      text-align: center;
+      font-weight: 600;
+      color: #15803d;
+      background: #f0fdf4;
+      user-select: none;
+      cursor: default;
+      font-size: 12px;
+      padding: 6px 4px;
+    }
+
+    /* 拆检结果下拉格 */
+    tbody td.status-cell {
+      padding: 0;
+      background: #eff6ff;
+    }
+
+    tbody td.status-cell select {
+      background: transparent;
+      border: none;
+      color: #1d4ed8;
+      font-weight: 600;
+      font-size: 12px;
+      width: 100%;
+      padding: 6px 4px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    tbody td.status-cell select:focus {
+      background: #dbeafe;
+    }
+
     tbody input[readonly] {
     .col-b { border-left: 2px solid #ccd5e0 !important; }
     .col-e { border-left: 2px solid #a0b4c8 !important; }
@@ -503,6 +537,22 @@ function nyTimeHM() {
          String(d.getSeconds()).padStart(2,'0');
 }
 
+// ── 拆检工时计算（分钟） ──
+function calcSpent(rd) {
+  const s = rd.startTime, e = rd.endTime;
+  if (!s || !e) return '';
+  const toMin = t => {
+    const p = t.split(':').map(Number);
+    return p[0]*60 + p[1];
+  };
+  const diff = toMin(e) - toMin(s);
+  if (diff <= 0) return '异常';
+  const h = Math.floor(diff / 60);
+  const m = diff % 60;
+  if (h > 0) return `${h}h${m}m`;
+  return `${m}m`;
+}
+
 // ── QR 码 ──
 let _qrInterval = null;
 
@@ -615,6 +665,7 @@ function refreshCalc(rd) {
   if (!el) return;
   el.querySelector('[data-col="startTime"]').value = rd.startTime || '';
   el.querySelector('[data-col="endTime"]').value   = rd.endTime   || '';
+  el.querySelector('[data-col="spent"]').textContent = calcSpent(rd);
 }
 
 // ── 光标流转 ──
