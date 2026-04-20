@@ -109,7 +109,7 @@
       margin-bottom: 14px;
       display: flex;
       align-items: center;
-      justify-content: flex-end;
+      justify-content: space-between;
       gap: 20px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
       border: 1px solid #e8ecf0;
@@ -436,25 +436,21 @@
     .submit-btn:active { transform: translateY(0); }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-    .submit-btn-fixed {
-      display: block;
-      position: fixed;
-      top: 20%;
-      right: 20px;
+    .submit-btn-inline {
       background: linear-gradient(135deg, #16a34a, #22c55e);
       color: #fff;
       border: 3px solid #4ade80;
-      border-radius: 16px;
-      font-size: 24px;
+      border-radius: 14px;
+      font-size: 48px;
       font-weight: 900;
       cursor: pointer;
       font-family: inherit;
       box-shadow: 0 6px 24px rgba(22,163,74,0.6);
       transition: all 0.2s;
-      padding: 16px 32px;
-      letter-spacing: 3px;
-      z-index: 1000;
+      padding: 12px 28px;
+      letter-spacing: 2px;
       animation: btnGlowGreen 2s ease-in-out infinite;
+      flex-shrink: 0;
     }
 
     @keyframes btnGlowGreen {
@@ -462,16 +458,16 @@
       50% { box-shadow: 0 6px 35px rgba(22,163,74,0.8), 0 0 20px rgba(22,163,74,0.4); }
     }
 
-    .submit-btn-fixed:hover {
+    .submit-btn-inline:hover {
       background: linear-gradient(135deg, #15803d, #16a34a);
       box-shadow: 0 8px 32px rgba(22,163,74,0.6);
       transform: translateY(-3px);
     }
 
-    .submit-btn-fixed:active { transform: translateY(0); }
-    .submit-btn-fixed:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .submit-btn-inline:active { transform: translateY(0); }
+    .submit-btn-inline:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-    .submit-btn { display: none; }
+    .submit-btn-fixed, .submit-btn { display: none; }
 
     .submit-toast {
       position: fixed;
@@ -525,6 +521,7 @@
 
 <!-- 二维码区（右侧对齐） -->
 <div class="qr-block">
+  <button class="submit-btn-inline" id="submitBtn">📤 提交数据</button>
   <div class="qr-info-block">
     <span class="qr-label">时间二维码 · 每60秒自动刷新</span>
     <span class="qr-time" id="qrTime">--:--:--</span>
@@ -532,9 +529,6 @@
   </div>
   <div id="qrcode"></div>
 </div>
-
-<!-- 右上角固定提交按钮 -->
-<button class="submit-btn-fixed" id="submitBtn">📤 提交数据</button>
 
 <!-- 区段标签（严格对应列分组：A-D / E-I / J-K） -->
 <div class="section-labels-row">
