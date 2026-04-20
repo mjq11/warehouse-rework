@@ -563,7 +563,7 @@ function renderQR() {
   document.getElementById('qrDate').textContent = nyDateStr();
 
   // 用 img 标签，仅替换 src 不刷新页面
-  const url = `https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=${encodeURIComponent(ts)}&choe=UTF-8&t=${Date.now()}`;
+  const url = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(ts)}&t=${Date.now()}`;
   el.innerHTML = `<img src="${url}" width="120" height="120" alt="time QR" style="border-radius:4px;">`;
 }
 
