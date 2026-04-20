@@ -436,7 +436,42 @@
     .submit-btn:active { transform: translateY(0); }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-    .submit-btn-fixed { display: none; }
+    .submit-btn-fixed {
+      display: block;
+      position: fixed;
+      top: 20%;
+      right: 20px;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      color: #fff;
+      border: 3px solid #4ade80;
+      border-radius: 16px;
+      font-size: 24px;
+      font-weight: 900;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 6px 24px rgba(22,163,74,0.6);
+      transition: all 0.2s;
+      padding: 16px 32px;
+      letter-spacing: 3px;
+      z-index: 1000;
+      animation: btnGlowGreen 2s ease-in-out infinite;
+    }
+
+    @keyframes btnGlowGreen {
+      0%, 100% { box-shadow: 0 6px 24px rgba(22,163,74,0.5); }
+      50% { box-shadow: 0 6px 35px rgba(22,163,74,0.8), 0 0 20px rgba(22,163,74,0.4); }
+    }
+
+    .submit-btn-fixed:hover {
+      background: linear-gradient(135deg, #15803d, #16a34a);
+      box-shadow: 0 8px 32px rgba(22,163,74,0.6);
+      transform: translateY(-3px);
+    }
+
+    .submit-btn-fixed:active { transform: translateY(0); }
+    .submit-btn-fixed:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .submit-btn { display: none; }
 
     .submit-toast {
       position: fixed;
@@ -497,6 +532,9 @@
   </div>
   <div id="qrcode"></div>
 </div>
+
+<!-- 右上角固定提交按钮 -->
+<button class="submit-btn-fixed" id="submitBtn">📤 提交数据</button>
 
 <!-- 区段标签（严格对应列分组：A-D / E-I / J-K） -->
 <div class="section-labels-row">
@@ -566,10 +604,7 @@
 <!-- 底部栏 -->
 <div class="bottom-bar">
   <span class="count-info" id="countInfo"></span>
-  <div class="bottom-bar-btns">
-    <button class="add-btn" id="addRowBtn">+ 添加行</button>
-    <button class="submit-btn" id="submitBtn">📤 提交数据</button>
-  </div>
+  <button class="add-btn" id="addRowBtn">+ 添加行</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
