@@ -593,7 +593,7 @@ function makeRow(isPre) {
   rowCount++;
   const id = rowCount;
   const rd = {
-    id, tracking:'', sku:'', qty:'', date: nyDateStr(),
+    id, tracking:'', sku:'', qty:'1', date: nyDateStr(),
     startTime:'', endTime:'', accessory:'', extracted:'',
     _el: null
   };
@@ -605,7 +605,7 @@ function makeRow(isPre) {
     <td class="row-num">${id}</td>
     <td class="col-b"><input type="text" data-col="tracking"  data-row="${id}" placeholder="扫码" autocomplete="off"></td>
     <td><input type="text" data-col="sku"         data-row="${id}" placeholder="扫码" autocomplete="off"></td>
-    <td><input type="text" data-col="qty"         data-row="${id}" placeholder="扫码" autocomplete="off"></td>
+    <td><input type="text" data-col="qty"         data-row="${id}" placeholder="扫码" autocomplete="off" value="1"></td>
     <td class="col-e"><input type="text" data-col="date"       data-row="${id}" readonly tabindex="-1"></td>
     <td><input type="text" data-col="startTime"   data-row="${id}" readonly tabindex="-1"></td>
     <td><input type="text" data-col="endTime"     data-row="${id}" readonly tabindex="-1"></td>
@@ -623,8 +623,9 @@ function makeRow(isPre) {
     <td><input type="text" data-col="extracted" data-row="${id}" placeholder="扫码累加" class="accum-input"></td>
   `;
 
-  // 默认日期
+  // 默认日期 & 实收数量
   tr.querySelector('[data-col="date"]').value = rd.date;
+  tr.querySelector('[data-col="qty"]').value   = rd.qty;
 
   // focus 事件：自动填时间
   tr.querySelectorAll('input').forEach(inp => {
