@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>仓库拆检统计</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .page-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 16px;
+      letter-spacing: 2px;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      margin-bottom: 4px;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    .header-cell {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: #444;
+    }
+
+    .header-cell .label { color: #888; }
+
+    .header-cell input {
+      border: none;
+      border-bottom: 1.5px solid #d0d7de;
+      background: transparent;
+      padding: 2px 4px;
+      font-size: 13px;
+      color: #1a1a1a;
+      outline: none;
+      min-width: 160px;
+      font-family: inherit;
+    }
+
+    .header-cell input:focus {
+      border-bottom-color: #3b82f6;
+    }
+
+    .qr-section {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 8px;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    .qr-label {
+      font-size: 13px;
+      color: #888;
+      min-width: 70px;
+    }
+
+    #qrcode {
+      width: 80px;
+      height: 80px;
+      border: 1px solid #e5e7eb;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+    }
+
+    #qrcode canvas {
+      width: 72px !important;
+      height: 72px !important;
+    }
+
+    .qr-info {
+      font-size: 11px;
+      color: #aaa;
+    }
+
+    .section-header {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      max-width: 1200px;
+      margin-bottom: 0;
+    }
+
+    .section-badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #555;
+      background: #e9ecef;
+      border-radius: 3px;
+      padding: 2px 8px;
+      letter-spacing: 1px;
+    }
+
+    .table-wrap {
+      width: 100%;
+      max-width: 1200px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      background: #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    thead th {
+      background: #f8f9fa;
+      color: #495057;
+      font-weight: 600;
+      text-align: center;
+      padding: 8px 6px;
+      border: 1px solid #dee2e6;
+      white-space: nowrap;
+      font-size: 11px;
+    }
+
+    thead th .cn { display: block; font-size: 12px; }
+    thead th .en { display: block; font-size: 10px; color: #888; font-weight: 400; margin-top: 1px; }
+
+    tbody tr:hover { background: #f8faff; }
+    tbody tr:nth-child(even) { background: #fafbfc; }
+    tbody tr:nth-child(even):hover { background: #f0f6ff; }
+
+    tbody td {
+      border: 1px solid #dee2e6;
+      padding: 0;
+      vertical-align: middle;
+      position: relative;
+    }
+
+    .row-num {
+      width: 36px;
+      min-width: 36px;
+      text-align: center;
+      color: #aaa;
+      font-size: 11px;
+      background: #f8f9fa;
+      font-weight: 500;
+    }
+
+    tbody input {
+      width: 100%;
+      min-width: 0;
+      border: none;
+      background: transparent;
+      padding: 5px 6px;
+      font-size: 12px;
+      color: #1a1a1a;
+      outline: none;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+
+    tbody input:focus {
+      background: #e8f0ff;
+      border: 1px solid #3b82f6;
+      padding: 4px 5px;
+    }
+
+    tbody input[readonly] {
+      background: #f8f9fa;
+      color: #666;
+      cursor: default;
+    }
+
+    /* Status column - auto calculated */
+    td.status-cell {
+      background: #f0fdf4;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #166534;
+      cursor: default;
+      user-select: none;
+    }
+
+    /* Section separators */
+    .col-b { border-left: 2px solid #dee2e6; }
+    .col-e { border-left: 2px solid #adb5bd; }
+    .col-j { border-left: 2px solid #dee2e6; }
+
+    /* Row color for first 50 */
+    .predefined-row .row-num { background: #e9ecef; }
+    .extra-row .row-num { background: #fff3cd; }
+
+    .add-row-btn {
+      margin-top: 12px;
+      padding: 8px 24px;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .add-row-btn:hover { background: #2563eb; }
+
+    .count-bar {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #888;
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* QR refresh pulse */
+    @keyframes qrPulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.3; }
+      100% { opacity: 1; }
+    }
+    .qr-refreshing { animation: qrPulse 0.4s ease-in-out; }
+  </style>
+</head>
+<body>
+
+<div class="page-title">仓库拆检统计表</div>
+
+<div class="header-row">
+  <div class="header-cell">
+    <span class="label">Coworker:</span>
+    <input type="text" id="coworkerInput" placeholder="扫码录入" autocomplete="off">
+  </div>
+  <div class="header-cell">
+    <span class="label">Date:</span>
+    <input type="text" id="dateInput" readonly tabindex="-1">
+  </div>
+</div>
+
+<div class="qr-section">
+  <span class="qr-label">时间二维码</span>
+  <div id="qrcode"></div>
+  <div>
+    <div style="font-size:13px;color:#333;margin-bottom:4px;" id="qrTime">--:--:--</div>
+    <div class="qr-info" id="qrInfo">每分钟自动刷新</div>
+  </div>
+</div>
+
+<div class="section-header">
+  <span class="section-badge">订单基础信息</span>
+  <span class="section-badge">拆检结果及工时</span>
+  <span class="section-badge">产生费用</span>
+</div>
+
+<div class="table-wrap">
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th class="row-num">#</th>
+        <th class="col-b">退货物流单号<br><span class="en">return tracking number</span></th>
+        <th>实收SKU<br><span class="en">Received SKU</span></th>
+        <th>实收数量<br><span class="en">Received qty</span></th>
+        <th class="col-e">拆检日期<br><span class="en">Rework date</span></th>
+        <th>拆检开始时间<br><span class="en">start time</span></th>
+        <th>拆检结束时间<br><span class="en">finish time</span></th>
+        <th>拆检工时<br><span class="en">time spent</span></th>
+        <th>拆检结果<br><span class="en">status</span></th>
+        <th class="col-j">包装辅料消耗SKU<br><span class="en">accessory used SKU</span></th>
+        <th>入库配件拆检SKU<br><span class="en">extracted SKU</span></th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<div class="count-bar">
+  <span id="countInfo"></span>
+  <span>v1.0 — 扫码枪友好 · 自动流转</span>
+</div>
+
+<button class="add-row-btn" id="addRowBtn">+ 添加行</button>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+// ─────────────────────────────────────────
+// 常量 & 配置
+// ─────────────────────────────────────────
+const COLS = ['seq','tracking','sku','qty','date','startTime','endTime','spent','status','accessory','extracted'];
+const INPUT_COLS = ['tracking','sku','qty','date','startTime','endTime','accessory','extracted'];
+// 扫描录入顺序（可输入的列，排除 seq/status/startTime/endTime/spent）
+const SCAN_ORDER = ['tracking','sku','qty','date','accessory','extracted'];
+const ROW_COUNT = 50;
+
+// ─────────────────────────────────────────
+// 美东时间工具
+// ─────────────────────────────────────────
+function getNYDateStr() {
+  const now = new Date();
+  const ny = new Date(now.toLocaleString('en-US', {timeZone: 'America/New_York'}));
+  return ny.getFullYear() + '-' +
+    String(ny.getMonth()+1).padStart(2,'0') + '-' +
+    String(ny.getDate()).padStart(2,'0');
+}
+
+function getNYDateTimeStr() {
+  const now = new Date();
+  const ny = new Date(now.toLocaleString('en-US', {timeZone: 'America/New_York'}));
+  return ny.getFullYear() + '-' +
+    String(ny.getMonth()+1).padStart(2,'0') + '-' +
+    String(ny.getDate()).padStart(2,'0') + ' ' +
+    String(ny.getHours()).padStart(2,'0') + ':' +
+    String(ny.getMinutes()).padStart(2,'0') + ':' +
+    String(ny.getSeconds()).padStart(2,'0');
+}
+
+function getNYDateTimeHM() {
+  const now = new Date();
+  const ny = new Date(now.toLocaleString('en-US', {timeZone: 'America/New_York'}));
+  return String(ny.getHours()).padStart(2,'0') + ':' +
+    String(ny.getMinutes()).padStart(2,'0') + ':' +
+    String(ny.getSeconds()).padStart(2,'0');
+}
+
+// ─────────────────────────────────────────
+// 拆检结果计算
+// ─────────────────────────────────────────
+function computeStatus(row) {
+  const start = row.startTime;
+  const end = row.endTime;
+  if (!start || !end) return '';
+  const [sh,sm,ss] = start.split(':').map(Number);
+  const [eh,em,es] = end.split(':').map(Number);
+  const totalS = (eh*3600+em*60+es) - (sh*3600+sm*60+ss);
+  if (totalS <= 0) return '异常';
+  const h = Math.floor(totalS/3600);
+  const m = Math.floor((totalS%3600)/60);
+  const s = totalS%60;
+  return h > 0
+    ? `${h}h ${m}m ${s}s`
+    : m > 0
+      ? `${m}m ${s}s`
+      : `${s}s`;
+}
+
+function updateRowCalc(row) {
+  const el = row._el;
+  if (!el) return;
+  const spent = computeStatus(row);
+  el.querySelector('[data-col="startTime"]').value = row.startTime || '';
+  el.querySelector('[data-col="endTime"]').value = row.endTime || '';
+  el.querySelector('[data-col="spent"]').textContent = spent;
+  el.querySelector('[data-col="status"]').textContent = row.status || '';
+}
+
+// ─────────────────────────────────────────
+// QR 码
+// ─────────────────────────────────────────
+let qrInterval = null;
+
+function generateQR() {
+  const qrEl = document.getElementById('qrcode');
+  qrEl.classList.add('qr-refreshing');
+  setTimeout(() => qrEl.classList.remove('qr-refreshing'), 400);
+
+  const ts = getNYDateTimeStr();
+  document.getElementById('qrTime').textContent = ts;
+
+  qrEl.innerHTML = '';
+  QRCode.toCanvas(document.createElement('canvas'), ts, {
+    width: 72, margin: 0, color: { dark: '#000', light: '#fff' }
+  }, function(err, canvas) {
+    if (err) return;
+    canvas.style.width = '72px';
+    canvas.style.height = '72px';
+    qrEl.appendChild(canvas);
+  });
+}
+
+function startQRRefresh() {
+  generateQR();
+  if (qrInterval) clearInterval(qrInterval);
+  qrInterval = setInterval(generateQR, 60000);
+}
+
+// ─────────────────────────────────────────
+// 表格渲染
+// ─────────────────────────────────────────
+let rowCounter = 0;
+let allRows = [];
+
+function createRow(isPredefined) {
+  rowCounter++;
+  const seq = rowCounter;
+  const rowData = {
+    id: seq,
+    tracking: '', sku: '', qty: '',
+    date: getNYDateStr(),
+    startTime: '', endTime: '', status: '',
+    accessory: '', extracted: '',
+    _el: null
+  };
+
+  const tr = document.createElement('tr');
+  tr.className = isPredefined ? 'predefined-row' : 'extra-row';
+
+  tr.innerHTML = `
+    <td class="row-num">${seq}</td>
+    <td class="col-b"><input type="text" data-col="tracking" data-row="${seq}" placeholder="扫码" autocomplete="off"></td>
+    <td><input type="text" data-col="sku"      data-row="${seq}" placeholder="扫码" autocomplete="off"></td>
+    <td><input type="text" data-col="qty"      data-row="${seq}" placeholder="扫码" autocomplete="off"></td>
+    <td class="col-e"><input type="text" data-col="date"    data-row="${seq}" readonly tabindex="-1"></td>
+    <td><input type="text" data-col="startTime" data-row="${seq}" readonly tabindex="-1"></td>
+    <td><input type="text" data-col="endTime"   data-row="${seq}" readonly tabindex="-1"></td>
+    <td class="status-cell" data-col="spent" data-row="${seq}"></td>
+    <td class="status-cell" data-col="status" data-row="${seq}"></td>
+    <td class="col-j"><input type="text" data-col="accessory" data-row="${seq}" placeholder="扫码" autocomplete="off"></td>
+    <td><input type="text" data-col="extracted" data-row="${seq}" placeholder="扫码" autocomplete="off"></td>
+  `;
+
+  // 默认日期填充
+  const dateInput = tr.querySelector('[data-col="date"]');
+  dateInput.value = rowData.date;
+
+  // 输入事件：记录数据
+  tr.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', function() {
+      rowData[this.dataset.col] = this.value.trim();
+      // 拆检开始时间：F列 focus 时自动填入
+    });
+    // 拆检开始时间：focus 时自动填入当前时间
+    inp.addEventListener('focus', function() {
+      const col = this.dataset.col;
+      if (col === 'startTime' && !rowData.startTime) {
+        rowData.startTime = getNYDateTimeHM();
+        rowData.endTime = '';
+        updateRowCalc(rowData);
+      }
+      if (col === 'endTime') {
+        rowData.endTime = getNYDateTimeHM();
+        updateRowCalc(rowData);
+      }
+      if (col === 'date' && !rowData.date) {
+        rowData.date = getNYDateStr();
+        this.value = rowData.date;
+      }
+    });
+  });
+
+  // Enter/Tab 流转
+  tr.querySelectorAll('input[data-col]').forEach(inp => {
+    inp.addEventListener('keydown', function(e) {
+      const col = this.dataset.col;
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        // 正常 Tab 行为，让它自然发生
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          advanceFocus(seq, col, 1);
+        }
+      }
+    });
+
+    inp.addEventListener('blur', function() {
+      const col = this.dataset.col;
+      if (col === 'startTime' && !rowData.startTime) {
+        rowData.startTime = getNYDateTimeHM();
+        updateRowCalc(rowData);
+      }
+    });
+  });
+
+  rowData._el = tr;
+  return rowData;
+}
+
+function buildTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  allRows = [];
+  rowCounter = 0;
+  for (let i = 0; i < ROW_COUNT; i++) {
+    const r = createRow(true);
+    allRows.push(r);
+    tbody.appendChild(r._el);
+  }
+  updateCount();
+}
+
+function addExtraRow() {
+  const tbody = document.getElementById('tableBody');
+  const r = createRow(false);
+  allRows.push(r);
+  tbody.appendChild(r._el);
+  updateCount();
+  // 聚焦到新行的第一个可输入格
+  r._el.querySelector('[data-col="tracking"]').focus();
+}
+
+function updateCount() {
+  const filled = allRows.filter(r => r.tracking).length;
+  document.getElementById('countInfo').textContent =
+    `已录入 ${filled} / ${allRows.length} 行（+ ${allRows.length - ROW_COUNT} 行额外）`;
+}
+
+// ─────────────────────────────────────────
+// 光标自动流转
+// ─────────────────────────────────────────
+function getNextCol(col) {
+  const idx = SCAN_ORDER.indexOf(col);
+  if (idx < SCAN_ORDER.length - 1) return SCAN_ORDER[idx + 1];
+  return null; // K列之后 → 需要换行
+}
+
+function advanceFocus(rowId, currentCol, direction) {
+  // direction: 1 = forward (Enter/Blur), -1 = backward
+  const rowIdx = allRows.findIndex(r => r.id === rowId);
+  if (rowIdx === -1) return;
+
+  const nextCol = getNextCol(currentCol);
+
+  if (nextCol) {
+    // 同行的下一个可输入列
+    const nextInput = allRows[rowIdx]._el.querySelector(`[data-col="${nextCol}"]`);
+    if (nextInput) setTimeout(() => { nextInput.focus(); nextInput.select(); }, 10);
+  } else {
+    // K列 → 下一行的 tracking 列
+    const nextRowIdx = rowIdx + 1;
+    if (nextRowIdx < allRows.length) {
+      const nextInput = allRows[nextRowIdx]._el.querySelector('[data-col="tracking"]');
+      if (nextInput) setTimeout(() => { nextInput.focus(); nextInput.select(); }, 10);
+    } else {
+      // 没有下一行 → 添加新行并聚焦
+      addExtraRow();
+    }
+  }
+}
+
+// 给每个可输入格绑定 Enter 和内容变化后的流转
+function bindScanFlow() {
+  SCAN_ORDER.forEach((col, colIdx) => {
+    allRows.forEach(row => {
+      const inp = row._el.querySelector(`[data-col="${col}"]`);
+      if (!inp) return;
+
+      // 内容变化后自动流转（扫码枪特点：一次输入触发一次 input）
+      inp.addEventListener('input', function() {
+        // 跳过 date（自动填充不需要流转）
+        // 其他列录入完成后下移
+        if (col !== 'date') {
+          row[this.dataset.col] = this.value.trim();
+          // 小延迟确保值已写入
+          setTimeout(() => advanceFocus(row.id, col, 1), 30);
+        }
+      });
+
+      // Enter 键流转
+      inp.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          advanceFocus(row.id, col, 1);
+        }
+      });
+    });
+  });
+}
+
+// ─────────────────────────────────────────
+// 初始化
+// ─────────────────────────────────────────
+document.getElementById('addRowBtn').addEventListener('click', addExtraRow);
+
+// 页面加载完成后自动聚焦
+window.addEventListener('load', () => {
+  // 填充美东日期
+  document.getElementById('dateInput').value = getNYDateStr();
+
+  buildTable();
+  startQRRefresh();
+
+  // 聚焦到 coworker
+  setTimeout(() => {
+    document.getElementById('coworkerInput').focus();
+  }, 100);
+});
+
+// 扫码枪回车兜底：全局拦截单字符+短时间大量输入后跟回车
+let lastKeyTime = 0;
+let lastKey = '';
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && document.activeElement.tagName === 'INPUT') {
+    const now = Date.now();
+    if (now - lastKeyTime < 200 && lastKey.length > 3) {
+      // 快速输入后回车，触发流转
+      const inp = document.activeElement;
+      const rowId = parseInt(inp.dataset.row);
+      const col = inp.dataset.col;
+      if (rowId && col) {
+        e.preventDefault();
+        advanceFocus(rowId, col, 1);
+      }
+    }
+  }
+  lastKeyTime = Date.now();
+  lastKey = e.key;
+});
+</script>
+</body>
+</html>
