@@ -275,9 +275,30 @@
       padding: 5px 6px;
     }
 
-    tbody input[readonly] {
-      background: #f8fafc;
-      color: #7a8fa8;
+    tbody select {
+      width: 100%;
+      border: none;
+      background: transparent;
+      padding: 6px 4px;
+      font-size: 12px;
+      color: #1a1a2e;
+      outline: none;
+      font-family: inherit;
+      min-width: 0;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    tbody select:focus {
+      background: #e8f2ff;
+      border: 1px solid #93c5fd;
+      padding: 5px 3px;
+    }
+
+    tbody select[readonly] {
+      background: #eff6ff;
+      color: #1d4ed8;
       cursor: default;
     }
 
@@ -485,24 +506,6 @@ function nyTimeHM() {
          String(d.getSeconds()).padStart(2,'0');
 }
 
-// ── 拆检结果计算 ──
-function calcStatus(rd) {
-  const s = rd.startTime, e = rd.endTime;
-  if (!s || !e) return '';
-  const toS = t => {
-    const p = t.split(':').map(Number);
-    return p[0]*3600 + p[1]*60 + (p[2]||0);
-  };
-  const diff = toS(e) - toS(s);
-  if (diff <= 0) return '❌ 异常';
-  const h = Math.floor(diff/3600);
-  const m = Math.floor((diff%3600)/60);
-  const sec = diff%60;
-  if (h > 0) return `✓ ${h}h ${m}m ${sec}s`;
-  if (m > 0) return `✓ ${m}m ${sec}s`;
-  return `✓ ${sec}s`;
-}
-
 // ── QR 码 ──
 let _qrInterval = null;
 
@@ -559,8 +562,16 @@ function makeRow(isPre) {
     <td class="col-e"><input type="text" data-col="date"       data-row="${id}" readonly tabindex="-1"></td>
     <td><input type="text" data-col="startTime"   data-row="${id}" readonly tabindex="-1"></td>
     <td><input type="text" data-col="endTime"     data-row="${id}" readonly tabindex="-1"></td>
-    <td class="calc-cell"         data-col="spent"   data-row="${id}"></td>
-    <td class="calc-cell status-cell" data-col="status" data-row="${id}"></td>
+    <td class="calc-cell"  data-col="spent"   data-row="${id}"></td>
+    <td class="status-cell" data-col="status" data-row="${id}">
+      <select data-col="status" data-row="${id}">
+        <option value="">—</option>
+        <option value="R1">R1</option>
+        <option value="K1">K1</option>
+        <option value="BF">BF</option>
+        <option value="SC">SC</option>
+      </select>
+    </td>
     <td class="col-j"><input type="text" data-col="accessory" data-row="${id}" placeholder="扫码" autocomplete="off"></td>
     <td><input type="text" data-col="extracted" data-row="${id}" placeholder="扫码" autocomplete="off"></td>
   `;
@@ -591,6 +602,13 @@ function makeRow(isPre) {
     });
   });
 
+  // select 事件：记录拆检结果
+  tr.querySelectorAll('select[data-col]').forEach(sel => {
+    sel.addEventListener('change', () => {
+      rd[sel.dataset.col] = sel.value;
+    });
+  });
+
   rd._el = tr;
   return rd;
 }
@@ -600,9 +618,6 @@ function refreshCalc(rd) {
   if (!el) return;
   el.querySelector('[data-col="startTime"]').value = rd.startTime || '';
   el.querySelector('[data-col="endTime"]').value   = rd.endTime   || '';
-  const raw = rd.startTime && rd.endTime ? calcStatus(rd) : '';
-  el.querySelector('[data-col="spent"]').textContent   = raw.replace('✓ ','');
-  el.querySelector('[data-col="status"]').textContent = raw;
 }
 
 // ── 光标流转 ──
