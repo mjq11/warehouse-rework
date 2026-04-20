@@ -375,24 +375,30 @@
     }
 
     .add-btn {
-      padding: 14px 36px;
+      padding: 16px 40px;
       background: linear-gradient(135deg, #1d4ed8, #3b82f6);
       color: #fff;
-      border: 2px solid #3b82f6;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 700;
+      border: 2px solid #60a5fa;
+      border-radius: 14px;
+      font-size: 20px;
+      font-weight: 800;
       cursor: pointer;
       font-family: inherit;
-      box-shadow: 0 4px 16px rgba(59,130,246,0.4);
+      box-shadow: 0 4px 20px rgba(59,130,246,0.5);
       transition: all 0.2s;
-      letter-spacing: 1px;
+      letter-spacing: 2px;
+      animation: btnGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes btnGlow {
+      0%, 100% { box-shadow: 0 4px 20px rgba(59,130,246,0.5); }
+      50% { box-shadow: 0 4px 30px rgba(59,130,246,0.8), 0 0 15px rgba(59,130,246,0.4); }
     }
 
     .add-btn:hover {
       background: linear-gradient(135deg, #1e40af, #2563eb);
-      box-shadow: 0 6px 20px rgba(59,130,246,0.5);
-      transform: translateY(-2px);
+      box-shadow: 0 6px 28px rgba(59,130,246,0.6);
+      transform: translateY(-3px);
     }
 
     .add-btn:active { transform: translateY(0); }
@@ -424,29 +430,35 @@
     /* 右侧固定竖排提交按钮 */
     .submit-btn-fixed {
       position: fixed;
-      right: 30px;
+      right: 0;
       top: 50%;
       transform: translateY(-50%);
       background: linear-gradient(135deg, #16a34a, #22c55e);
       color: #fff;
       border: none;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 700;
+      border-radius: 16px 0 0 16px;
+      font-size: 18px;
+      font-weight: 800;
       cursor: pointer;
       font-family: inherit;
-      box-shadow: 0 6px 24px rgba(22,163,74,0.4);
+      box-shadow: 0 6px 24px rgba(22,163,74,0.5);
       transition: all 0.2s;
-      padding: 16px 12px;
-      line-height: 1.8;
-      letter-spacing: 2px;
+      padding: 20px 14px;
+      line-height: 2;
+      letter-spacing: 3px;
       z-index: 1000;
+      animation: btnGlowGreen 2s ease-in-out infinite;
+    }
+
+    @keyframes btnGlowGreen {
+      0%, 100% { box-shadow: 0 6px 24px rgba(22,163,74,0.5); }
+      50% { box-shadow: 0 6px 35px rgba(22,163,74,0.8), 0 0 20px rgba(22,163,74,0.4); }
     }
 
     .submit-btn-fixed:hover {
       background: linear-gradient(135deg, #15803d, #16a34a);
-      box-shadow: 0 8px 32px rgba(22,163,74,0.5);
-      transform: translateY(-50%) scale(1.05);
+      box-shadow: 0 8px 32px rgba(22,163,74,0.6);
+      transform: translateY(-50%) translateX(-5px);
     }
 
     .submit-btn-fixed:active { transform: translateY(-50%) scale(0.98); }
