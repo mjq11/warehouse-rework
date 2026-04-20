@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>仓库拆检登记系统</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #eef2f7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 20px 60px;
+    }
+
+    /* ── 页面标题 ── */
+    .page-header {
+      width: 100%;
+      max-width: 1100px;
+      background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+      color: #fff;
+      border-radius: 12px;
+      padding: 20px 28px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(30,58,95,0.25);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .page-header::before {
+      content: '';
+      position: absolute;
+      top: -30px; right: -30px;
+      width: 160px; height: 160px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .page-header .title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 3px;
+    }
+
+    .page-header .subtitle {
+      font-size: 12px;
+      opacity: 0.6;
+      margin-top: 3px;
+      letter-spacing: 1px;
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .header-field {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+    }
+
+    .header-field .lbl {
+      font-size: 11px;
+      opacity: 0.55;
+      letter-spacing: 1px;
+    }
+
+    .header-field input {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 6px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 5px 12px;
+      font-family: inherit;
+      outline: none;
+      min-width: 180px;
+      text-align: right;
+    }
+
+    .header-field input:focus {
+      border-color: rgba(255,255,255,0.6);
+      background: rgba(255,255,255,0.18);
+    }
+
+    .header-field input[readonly] {
+      opacity: 0.7;
+      cursor: default;
+    }
+
+    /* ── QR 区域 ── */
+    .qr-block {
+      width: 100%;
+      max-width: 1100px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px 24px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      border: 1px solid #e8ecf0;
+    }
+
+    .qr-info-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      text-align: right;
+    }
+
+    .qr-info-block .qr-label {
+      font-size: 12px;
+      color: #999;
+      letter-spacing: 2px;
+    }
+
+    .qr-info-block .qr-time {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1e3a5f;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 1px;
+    }
+
+    .qr-info-block .qr-note {
+      font-size: 11px;
+      color: #c0c8d4;
+    }
+
+    #qrcode {
+      width: 120px;
+      height: 120px;
+      border-radius: 8px;
+      border: 1px solid #e8ecf0;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    #qrcode img { border-radius: 4px; }
+
+    /* ── 提交按钮行 ── */
+    .submit-row {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      justify-content: flex-end;
+      padding: 8px 0;
+      margin-bottom: 4px;
+    }
+
+    .submit-row button {
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      color: #fff;
+      border: 2px solid #4ade80;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 4px 16px rgba(22,163,74,0.4);
+      transition: all 0.2s;
+      padding: 10px 28px;
+      letter-spacing: 2px;
+    }
+
+    .submit-row button:hover {
+      background: linear-gradient(135deg, #15803d, #16a34a);
+      box-shadow: 0 6px 20px rgba(22,163,74,0.5);
+    }
+
+    .submit-row button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* ── 区段标签行 ── */
+    .section-labels-row {
+      width: 100%;
+      max-width: 1100px;
+      display: grid;
+      grid-template-columns: 4fr 5fr 2fr; /* A-D:4格 E-I:5格 J-K:2格 */
+      margin-bottom: 2px;
+      gap: 3px;
+    }
+
+    .sec-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      border-radius: 5px;
+      padding: 5px 10px;
+      letter-spacing: 1.5px;
+      white-space: nowrap;
+    }
+
+    .sec-badge.blue   { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+    .sec-badge.orange { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
+    .sec-badge.green  { background: linear-gradient(135deg, #10b981, #34d399); }
+
+    /* ── 表格 ── */
+    .table-wrap {
+      width: 100%;
+      max-width: 1100px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+    }
+
+    thead th {
+      background: linear-gradient(135deg, #f8fafc 0%, #eef2f7 100%);
+      color: #3d5a80;
+      font-weight: 600;
+      text-align: center;
+      padding: 10px 6px;
+      border-bottom: 2px solid #d0d7e0;
+      font-size: 11px;
+      white-space: nowrap;
+      border-right: 1px solid #e8ecf0;
+    }
+
+    thead th:last-child { border-right: none; }
+
+    thead th .cn {
+      display: block;
+      font-size: 12px;
+      color: #2c3e50;
+      font-weight: 700;
+    }
+
+    thead th .en {
+      display: block;
+      font-size: 9.5px;
+      color: #9db0c8;
+      font-weight: 400;
+      margin-top: 2px;
+      letter-spacing: 0.3px;
+    }
+
+    tbody tr:hover { background: #f0f6ff; }
+
+    tbody td {
+      border-bottom: 1px solid #eef2f7;
+      border-right: 1px solid #eef2f7;
+      padding: 0;
+      vertical-align: middle;
+    }
+
+    tbody td:last-child { border-right: none; }
+    tbody td.row-num { border-right: 2px solid #e0e6ef; }
+
+    .row-num {
+      width: 38px;
+      min-width: 38px;
+      text-align: center;
+      color: #b0bec5;
+      font-size: 11px;
+      background: #fafbfc;
+      font-weight: 500;
+      user-select: none;
+    }
+
+    tbody input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      padding: 6px 7px;
+      font-size: 12px;
+      color: #1a1a2e;
+      outline: none;
+      font-family: inherit;
+      min-width: 0;
+    }
+
+    tbody input:focus {
+      background: #e8f2ff;
+      border: 1px solid #93c5fd;
+      padding: 5px 6px;
+    }
+
+    tbody select {
+      width: 100%;
+      border: none;
+      background: transparent;
+      padding: 6px 4px;
+      font-size: 12px;
+      color: #1a1a2e;
+      outline: none;
+      font-family: inherit;
+      min-width: 0;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    tbody select:focus {
+      background: #e8f2ff;
+      border: 1px solid #93c5fd;
+      padding: 5px 3px;
+    }
+
+    tbody select[readonly] {
+      background: #eff6ff;
+      color: #1d4ed8;
+      cursor: default;
+    }
+
+    tbody input:focus {
+      background: #e8f2ff;
+      border: 1px solid #93c5fd;
+      padding: 5px 6px;
+    }
+
+    /* 累加扫码格：包装辅料 / 入库配件 */
+    tbody input.accum-input {
+      background: #fffbf0;
+    }
+
+    tbody input.accum-input:focus {
+      background: #fffbea;
+      border-color: #f59e0b;
+      padding: 5px 6px;
+    }
+
+    /* 拆检工时自动计算格 */
+    tbody td[data-col="spent"] {
+      text-align: center;
+      font-weight: 600;
+      color: #15803d;
+      background: #f0fdf4;
+      user-select: none;
+      cursor: default;
+      font-size: 12px;
+      padding: 6px 4px;
+    }
+
+    /* 拆检结果下拉格 */
+    tbody td.status-cell {
+      padding: 0;
+      background: #eff6ff;
+    }
+
+    tbody td.status-cell select {
+      background: transparent;
+      border: none;
+      color: #1d4ed8;
+      font-weight: 600;
+      font-size: 12px;
+      width: 100%;
+      padding: 6px 4px;
+      cursor: pointer;
+      outline: none;
+    }
+
+    tbody td.status-cell select:focus {
+      background: #dbeafe;
+    }
+
+    tbody input[readonly] {
+    .col-b { border-left: 2px solid #ccd5e0 !important; }
+    .col-e { border-left: 2px solid #a0b4c8 !important; }
+    .col-j { border-left: 2px solid #ccd5e0 !important; }
+
+    /* 行底色 */
+    .predefined-row .row-num { background: #f1f5f9; }
+    .extra-row .row-num { background: #fef3c7; }
+
+    /* ── 底部 ── */
+    .bottom-bar {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      gap: 20px;
+    }
+
+    .bottom-bar-btns {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .count-info {
+      font-size: 12px;
+      color: #9ca3af;
+      flex-shrink: 0;
+    }
+
+    .add-btn {
+      padding: 18px 48px;
+      background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+      color: #fff;
+      border: 3px solid #60a5fa;
+      border-radius: 16px;
+      font-size: 40px;
+      font-weight: 900;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 6px 24px rgba(59,130,246,0.6);
+      transition: all 0.2s;
+      letter-spacing: 3px;
+      animation: btnGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes btnGlow {
+      0%, 100% { box-shadow: 0 4px 20px rgba(59,130,246,0.5); }
+      50% { box-shadow: 0 4px 30px rgba(59,130,246,0.8), 0 0 15px rgba(59,130,246,0.4); }
+    }
+
+    .add-btn:hover {
+      background: linear-gradient(135deg, #1e40af, #2563eb);
+      box-shadow: 0 6px 28px rgba(59,130,246,0.6);
+      transform: translateY(-3px);
+    }
+
+    .add-btn:active { transform: translateY(0); }
+
+    .submit-btn {
+      display: none;
+    }
+
+    .submit-btn-fixed, .submit-btn { display: none; }
+
+    .submit-toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: #fff;
+      border: 1px solid #e0e6ef;
+      border-radius: 10px;
+      padding: 12px 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 9999;
+      transition: transform 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .submit-toast.show { transform: translateX(-50%) translateY(0); }
+    .submit-toast.success { color: #16a34a; }
+    .submit-toast.error   { color: #dc2626; }
+
+    @keyframes qrPulse {
+      0%   { opacity: 1; transform: scale(1); }
+      40%  { opacity: 0.4; transform: scale(0.96); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    .qr-flash { animation: qrPulse 0.35s ease-in-out; }
+  </style>
+</head>
+<body>
+
+<!-- 页面标题区 -->
+<div class="page-header">
+  <div>
+    <div class="title">仓库拆检登记系统</div>
+    <div class="subtitle">WAREHOUSE REWORK TRACKING SYSTEM</div>
+  </div>
+  <div class="header-meta">
+    <div class="header-field">
+      <span class="lbl">COWORKER</span>
+      <input type="text" id="coworkerInput" placeholder="扫码录入" autocomplete="off">
+    </div>
+    <div class="header-field">
+      <span class="lbl">DATE (NY)</span>
+      <input type="text" id="dateInput" readonly tabindex="-1">
+    </div>
+  </div>
+</div>
+
+<!-- 二维码区（右侧对齐） -->
+<div class="qr-block">
+  <div class="qr-info-block">
+    <span class="qr-label">时间二维码 · 每60秒自动刷新</span>
+    <span class="qr-time" id="qrTime">--:--:--</span>
+    <span class="qr-note" id="qrDate">--</span>
+  </div>
+  <div id="qrcode"></div>
+</div>
+
+<!-- 提交按钮行 -->
+<div class="submit-row">
+  <button id="submitBtn">📤 提交数据</button>
+</div>
+
+<!-- 区段标签（严格对应列分组：A-D / E-I / J-K） -->
+<div class="section-labels-row">
+  <div class="sec-badge blue">订单基础信息</div>
+  <div class="sec-badge orange">拆检结果及工时</div>
+  <div class="sec-badge green">产生费用</div>
+</div>
+
+<!-- 数据表格 -->
+<div class="table-wrap">
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <!-- A: 序号 — 订单基础信息 -->
+        <th class="row-num">
+          <span class="cn">序号</span>
+        </th>
+        <!-- B-D: 订单基础信息 -->
+        <th class="col-b">
+          <span class="cn">退货物流单号</span>
+          <span class="en">return tracking number</span>
+        </th>
+        <th>
+          <span class="cn">实收SKU</span>
+          <span class="en">Received SKU</span>
+        </th>
+        <th>
+          <span class="cn">实收数量</span>
+          <span class="en">Received qty</span>
+        </th>
+        <!-- E-I: 拆检结果及工时 -->
+        <th class="col-e">
+          <span class="cn">拆检日期</span>
+          <span class="en">Rework date</span>
+        </th>
+        <th>
+          <span class="cn">拆检开始时间</span>
+          <span class="en">start time</span>
+        </th>
+        <th>
+          <span class="cn">拆检结束时间</span>
+          <span class="en">finish time</span>
+        </th>
+        <th>
+          <span class="cn">拆检工时</span>
+          <span class="en">time spent</span>
+        </th>
+        <th>
+          <span class="cn">拆检结果</span>
+          <span class="en">status</span>
+        </th>
+        <!-- J-K: 产生费用 -->
+        <th class="col-j">
+          <span class="cn">包装辅料消耗SKU</span>
+          <span class="en">accessory used SKU</span>
+        </th>
+        <th>
+          <span class="cn">入库配件拆检SKU</span>
+          <span class="en">extracted SKU</span>
+        </th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<!-- 底部栏 -->
+<div class="bottom-bar">
+  <span class="count-info" id="countInfo"></span>
+  <button class="add-btn" id="addRowBtn">+ 添加行</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<script>
+// ── 时区工具 ──
+function getNY() {
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false
+  });
+  const parts = fmt.formatToParts(now);
+  const p = {};
+  for (const part of parts) p[part.type] = part.value;
+  return new Date(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+}
+
+function nyDateStr() {
+  const d = getNY();
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+
+function nyTimeFull() {
+  const d = getNY();
+  return String(d.getHours()).padStart(2,'0') + ':' +
+         String(d.getMinutes()).padStart(2,'0') + ':' +
+         String(d.getSeconds()).padStart(2,'0');
+}
+
+function nyTimeHM() {
+  const d = getNY();
+  return String(d.getHours()).padStart(2,'0') + ':' +
+         String(d.getMinutes()).padStart(2,'0') + ':' +
+         String(d.getSeconds()).padStart(2,'0');
+}
+
+// ── 拆检工时计算（分钟） ──
+function calcSpent(rd) {
+  const s = rd.startTime, e = rd.endTime;
+  if (!s || !e) return '';
+  const toMin = t => {
+    const p = t.split(':').map(Number);
+    return p[0]*60 + p[1];
+  };
+  const diff = toMin(e) - toMin(s);
+  if (diff <= 0) return '异常';
+  const h = Math.floor(diff / 60);
+  const m = diff % 60;
+  if (h > 0) return `${h}h${m}m`;
+  return `${m}m`;
+}
+
+// ── QR 码（Google Chart API，每 60 秒刷新，仅刷新图片 src） ──
+let _qrInterval = null;
+let _qrEl = null;
+
+function renderQR() {
+  const el = document.getElementById('qrcode');
+  _qrEl = el;
+
+  const ts = nyTimeFull();
+  document.getElementById('qrTime').textContent = nyTimeFull();
+  document.getElementById('qrDate').textContent = nyDateStr();
+
+  // 用 img 标签，仅替换 src 不刷新页面
+  const url = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(ts)}&t=${Date.now()}`;
+  el.innerHTML = `<img src="${url}" width="120" height="120" alt="time QR" style="border-radius:4px;">`;
+}
+
+function startQR() {
+  renderQR();
+  if (_qrInterval) clearInterval(_qrInterval);
+  _qrInterval = setInterval(renderQR, 60000);
+}
+
+// ── 表格构建 ──
+// 扫码流转：tracking → sku → 跳到 startTime（跳过 C/D/E）
+const SCAN_COLS   = ['tracking','sku'];
+const JUMP_AFTER_QTY = 'startTime';  // qty 输入后跳到此列
+const ROW_INIT    = 50;
+let rowCount = 0;
+let rows     = [];
+
+function makeRow(isPre) {
+  rowCount++;
+  const id = rowCount;
+  const rd = {
+    id, tracking:'', sku:'', qty:'1', date: nyDateStr(),
+    startTime:'', endTime:'', accessory:'', extracted:'',
+    _el: null
+  };
+
+  const tr = document.createElement('tr');
+  tr.className = isPre ? 'predefined-row' : 'extra-row';
+
+  tr.innerHTML = `
+    <td class="row-num">${id}</td>
+    <td class="col-b"><input type="text" data-col="tracking"  data-row="${id}" placeholder="扫码" autocomplete="off"></td>
+    <td><input type="text" data-col="sku"         data-row="${id}" placeholder="扫码" autocomplete="off"></td>
+    <td><input type="text" data-col="qty"         data-row="${id}" placeholder="扫码" autocomplete="off" value="1"></td>
+    <td class="col-e"><input type="text" data-col="date"       data-row="${id}" readonly tabindex="-1"></td>
+    <td><input type="text" data-col="startTime"   data-row="${id}" placeholder="扫码" autocomplete="off"></td>
+    <td><input type="text" data-col="endTime"     data-row="${id}" placeholder="扫码" autocomplete="off"></td>
+    <td data-col="spent" data-row="${id}"></td>
+    <td class="status-cell" data-col="status" data-row="${id}">
+      <select data-col="status" data-row="${id}">
+        <option value="">—</option>
+        <option value="R1">R1</option>
+        <option value="K1">K1</option>
+        <option value="BF">BF</option>
+        <option value="SC">SC</option>
+      </select>
+    </td>
+    <td class="col-j"><input type="text" data-col="accessory" data-row="${id}" placeholder="扫码累加" class="accum-input"></td>
+    <td><input type="text" data-col="extracted" data-row="${id}" placeholder="扫码累加" class="accum-input"></td>
+  `;
+
+  // 默认日期 & 实收数量
+  tr.querySelector('[data-col="date"]').value = rd.date;
+  tr.querySelector('[data-col="qty"]').value   = rd.qty;
+
+  // focus 事件：扫码枪录入时间，不再自动取值
+  // tr.querySelectorAll('input').forEach(inp => {
+  //   inp.addEventListener('focus', () => {
+  //     const col = inp.dataset.col;
+  //     if (col === 'startTime' && !rd.startTime) {
+  //       rd.startTime = nyTimeHM();
+  //       rd.endTime = '';
+  //       refreshCalc(rd);
+  //     }
+  //     if (col === 'endTime') {
+  //       rd.endTime = nyTimeHM();
+  //       refreshCalc(rd);
+  //     }
+  //   });
+  // });
+
+  // input 事件：记录数据 & 实时计算工时
+  tr.querySelectorAll('input[data-col]').forEach(inp => {
+    inp.addEventListener('input', () => {
+      rd[inp.dataset.col] = inp.value.trim();
+      // startTime/endTime 变化时重新计算工时
+      if (inp.dataset.col === 'startTime' || inp.dataset.col === 'endTime') {
+        refreshCalc(rd);
+      }
+    });
+  });
+
+  // select 事件：记录拆检结果
+  tr.querySelectorAll('select[data-col]').forEach(sel => {
+    sel.addEventListener('change', () => {
+      rd[sel.dataset.col] = sel.value;
+    });
+  });
+
+  rd._el = tr;
+  return rd;
+}
+
+function refreshCalc(rd) {
+  const el = rd._el;
+  if (!el) return;
+  el.querySelector('[data-col="startTime"]').value = rd.startTime || '';
+  el.querySelector('[data-col="endTime"]').value   = rd.endTime   || '';
+  el.querySelector('[data-col="spent"]').textContent = calcSpent(rd);
+}
+
+// ── 光标流转 ──
+function jumpTo(rowId, col) {
+  if (!col) return;
+  const idx = rows.findIndex(r => r.id === rowId);
+  const inp = rows[idx]._el.querySelector(`[data-col="${col}"]`);
+  if (inp) setTimeout(() => { inp.focus(); inp.select(); }, 15);
+}
+
+function bindFlow() {
+  // 扫码流转：tracking → sku → startTime（跳过 C/D/E 列）
+// 实收数量(qty)输入完成后也跳到 startTime
+SCAN_COLS.forEach(col => {
+  rows.forEach(rd => {
+    const inp = rd._el.querySelector(`input[data-col="${col}"]`);
+    if (!inp) return;
+    inp.addEventListener('input', () => {
+      rd[col] = inp.value.trim();
+      const i = SCAN_COLS.indexOf(col);
+      if (i < SCAN_COLS.length - 1) {
+        const next = SCAN_COLS[i + 1];
+        if (next) setTimeout(() => jumpTo(rd.id, next), 40);
+      }
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const i = SCAN_COLS.indexOf(col);
+        if (i < SCAN_COLS.length - 1) {
+          jumpTo(rd.id, SCAN_COLS[i + 1]);
+        } else {
+          inp.blur();
+        }
+      }
+    });
+  });
+});
+
+// qty 输入完成后跳到 startTime
+rows.forEach(rd => {
+  const qtyInp = rd._el.querySelector('input[data-col="qty"]');
+  if (!qtyInp) return;
+  qtyInp.addEventListener('input', () => {
+    rd.qty = qtyInp.value.trim();
+    if (JUMP_AFTER_QTY) setTimeout(() => jumpTo(rd.id, JUMP_AFTER_QTY), 40);
+  });
+  qtyInp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (JUMP_AFTER_QTY) jumpTo(rd.id, JUMP_AFTER_QTY);
+    }
+  });
+});
+
+  // 累加扫码：包装辅料 / 入库配件（扫码累加，不跳下一行）
+  const ACCUM_COLS = ['accessory', 'extracted'];
+  ACCUM_COLS.forEach(col => {
+    rows.forEach(rd => {
+      const inp = rd._el.querySelector(`input[data-col="${col}"]`);
+      if (!inp) return;
+
+      // 聚焦时清掉末尾多余分隔符，保持整洁
+      inp.addEventListener('focus', () => {
+        inp.value = inp.value.replace(/、+$/, '');
+        rd[col] = inp.value;
+      });
+
+      // 输入完（通过 Enter 确认），追加分隔符，停留在当前格
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          inp.value = inp.value.replace(/、+$/, '');
+          if (inp.value) inp.value += '、';
+          rd[col] = inp.value;
+          // 保持在本格，准备下一次扫码
+          setTimeout(() => { inp.focus(); }, 10);
+        }
+      });
+
+      // 记录数据
+      inp.addEventListener('input', () => {
+        rd[col] = inp.value;
+      });
+    });
+  });
+}
+
+function build() {
+  const tb = document.getElementById('tableBody');
+  tb.innerHTML = '';
+  rows = []; rowCount = 0;
+  for (let i = 0; i < ROW_INIT; i++) {
+    const r = makeRow(true);
+    rows.push(r);
+    tb.appendChild(r._el);
+  }
+  bindFlow();
+  updateCount();
+}
+
+function addRow() {
+  const tb = document.getElementById('tableBody');
+  const r = makeRow(false);
+  rows.push(r);
+  tb.appendChild(r._el);
+  bindFlow();
+  updateCount();
+  jumpTo(r.id, 'tracking');
+}
+
+function updateCount() {
+  const filled = rows.filter(r => r.tracking).length;
+  const extra  = rows.length - ROW_INIT;
+  document.getElementById('countInfo').textContent =
+    `已录入 ${filled} / ${rows.length} 行${extra ? `（含 ${extra} 行额外）` : ''}`;
+}
+
+document.getElementById('addRowBtn').addEventListener('click', addRow);
+
+// ═══════════════════════════════════════════════════════════════
+// 提交功能配置
+// ═══════════════════════════════════════════════════════════════
+// 【重要】请将下面的 URL 替换为你部署的 Google Apps Script Web 应用 URL
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbybigULEW1MHlqCxdOdU2FLSYEyMRJgz0duD3ipsg/dev';
+
+// ═══════════════════════════════════════════════════════════════
+// 提交功能
+// ═══════════════════════════════════════════════════════════════
+function showToast(msg, isError = false) {
+  let toast = document.getElementById('submitToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'submitToast';
+    toast.className = 'submit-toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.className = 'submit-toast ' + (isError ? 'error' : 'success');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function collectData() {
+  const coworker = document.getElementById('coworkerInput').value.trim() || '未填写';
+  const submitTime = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+  const filledRows = rows.filter(r => r.tracking && r.tracking.trim());
+  if (filledRows.length === 0) {
+    return null; // 没有有效数据
+  }
+  
+  // 按 Google Script 格式：每行包含 coworker 和 submitTime
+  const rowDataList = filledRows.map((rd, idx) => ({
+    index: idx + 1,
+    tracking: rd.tracking || '',
+    sku: rd.sku || '',
+    qty: rd.qty || '',
+    date: rd.date || '',
+    startTime: rd.startTime || '',
+    endTime: rd.endTime || '',
+    spent: rd.spent || '',
+    result: rd.status || '',     // 拆检结果
+    j: rd.accessory || '',       // 包装辅料消耗SKU
+    k: rd.extracted || '',       // 入库配件拆检SKU
+    coworker: coworker,
+    submitTime: submitTime
+  }));
+  
+  return { rows: rowDataList };
+}
+
+async function submitData() {
+  const btn = document.getElementById('submitBtn');
+  const data = collectData();
+  
+  if (!data) {
+    showToast('没有可提交的数据！请先录入至少一条记录', true);
+    return;
+  }
+  
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID')) {
+    showToast('请先配置 Google Apps Script URL！', true);
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.textContent = '提交中...';
+  
+  try {
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      showToast('✓ 提交成功！共 ' + result.count + ' 条记录');
+      // 清空已提交的数据
+      rows.forEach(rd => {
+        rd.tracking = rd.sku = rd.qty = rd.startTime = rd.endTime = 
+          rd.status = rd.accessory = rd.extracted = '';
+        rd._el.querySelectorAll('input').forEach(inp => inp.value = '');
+        rd._el.querySelector('[data-col="spent"]').textContent = '';
+        rd._el.querySelector('select').value = '';
+      });
+      document.getElementById('coworkerInput').value = '';
+      updateCount();
+    } else {
+      showToast('提交失败: ' + (result.message || '未知错误'), true);
+    }
+  } catch (e) {
+    showToast('提交失败: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📤 提交数据';
+  }
+}
+
+document.getElementById('submitBtn').addEventListener('click', submitData);
+
+window.addEventListener('load', () => {
+  document.getElementById('dateInput').value = nyDateStr();
+  build();
+  startQR();
+  setTimeout(() => document.getElementById('coworkerInput').focus(), 120);
+});
+</script>
+</body>
+</html>
