@@ -142,8 +142,8 @@
     }
 
     #qrcode {
-      width: 100px;
-      height: 100px;
+      width: 120px;
+      height: 120px;
       border-radius: 8px;
       border: 1px solid #e8ecf0;
       background: #fff;
@@ -152,13 +152,10 @@
       justify-content: center;
       box-shadow: 0 2px 8px rgba(0,0,0,0.06);
       flex-shrink: 0;
+      overflow: hidden;
     }
 
-    #qrcode canvas {
-      width: 88px !important;
-      height: 88px !important;
-      border-radius: 4px;
-    }
+    #qrcode img { border-radius: 4px; }
 
     /* ── 区段标签行 ── */
     .section-labels-row {
@@ -553,28 +550,21 @@ function calcSpent(rd) {
   return `${m}m`;
 }
 
-// ── QR 码 ──
+// ── QR 码（Google Chart API，每 60 秒刷新，仅刷新图片 src） ──
 let _qrInterval = null;
+let _qrEl = null;
 
 function renderQR() {
   const el = document.getElementById('qrcode');
-  el.classList.add('qr-flash');
-  setTimeout(() => el.classList.remove('qr-flash'), 350);
+  _qrEl = el;
 
   const ts = nyDateStr() + ' ' + nyTimeFull();
   document.getElementById('qrTime').textContent = nyTimeFull();
   document.getElementById('qrDate').textContent = nyDateStr();
 
-  el.innerHTML = '';
-  QRCode.toCanvas(document.createElement('canvas'), ts, {
-    width: 88, margin: 0,
-    color: { dark: '#1e3a5f', light: '#ffffff' }
-  }, (err, canvas) => {
-    if (err) return;
-    canvas.style.width = '88px';
-    canvas.style.height = '88px';
-    el.appendChild(canvas);
-  });
+  // 用 img 标签，仅替换 src 不刷新页面
+  const url = `https://chart.googleapis.com/chart?chs=120x120&cht=qr&chl=${encodeURIComponent(ts)}&choe=UTF-8&t=${Date.now()}`;
+  el.innerHTML = `<img src="${url}" width="120" height="120" alt="time QR" style="border-radius:4px;">`;
 }
 
 function startQR() {
