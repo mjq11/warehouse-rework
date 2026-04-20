@@ -157,6 +157,38 @@
 
     #qrcode img { border-radius: 4px; }
 
+    /* ── 提交按钮行 ── */
+    .submit-row {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      justify-content: flex-end;
+      padding: 8px 0;
+      margin-bottom: 4px;
+    }
+
+    .submit-row button {
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      color: #fff;
+      border: 2px solid #4ade80;
+      border-radius: 10px;
+      font-size: 22px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 4px 16px rgba(22,163,74,0.4);
+      transition: all 0.2s;
+      padding: 10px 32px;
+      letter-spacing: 2px;
+    }
+
+    .submit-row button:hover {
+      background: linear-gradient(135deg, #15803d, #16a34a);
+      box-shadow: 0 6px 20px rgba(22,163,74,0.5);
+    }
+
+    .submit-row button:disabled { opacity: 0.6; cursor: not-allowed; }
+
     /* ── 区段标签行 ── */
     .section-labels-row {
       width: 100%;
@@ -415,37 +447,6 @@
       display: none;
     }
 
-    .submit-btn-inline {
-      background: linear-gradient(135deg, #16a34a, #22c55e);
-      color: #fff;
-      border: 3px solid #4ade80;
-      border-radius: 14px;
-      font-size: 96px;
-      font-weight: 900;
-      cursor: pointer;
-      font-family: inherit;
-      box-shadow: 0 6px 24px rgba(22,163,74,0.6);
-      transition: all 0.2s;
-      padding: 12px 28px;
-      letter-spacing: 2px;
-      animation: btnGlowGreen 2s ease-in-out infinite;
-      flex-shrink: 0;
-    }
-
-    @keyframes btnGlowGreen {
-      0%, 100% { box-shadow: 0 6px 24px rgba(22,163,74,0.5); }
-      50% { box-shadow: 0 6px 35px rgba(22,163,74,0.8), 0 0 20px rgba(22,163,74,0.4); }
-    }
-
-    .submit-btn-inline:hover {
-      background: linear-gradient(135deg, #15803d, #16a34a);
-      box-shadow: 0 8px 32px rgba(22,163,74,0.6);
-      transform: translateY(-3px);
-    }
-
-    .submit-btn-inline:active { transform: translateY(0); }
-    .submit-btn-inline:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
-
     .submit-btn-fixed, .submit-btn { display: none; }
 
     .submit-toast {
@@ -500,13 +501,17 @@
 
 <!-- 二维码区（右侧对齐） -->
 <div class="qr-block">
-  <button class="submit-btn-inline" id="submitBtn">📤 提交数据</button>
   <div class="qr-info-block">
     <span class="qr-label">时间二维码 · 每60秒自动刷新</span>
     <span class="qr-time" id="qrTime">--:--:--</span>
     <span class="qr-note" id="qrDate">--</span>
   </div>
   <div id="qrcode"></div>
+</div>
+
+<!-- 提交按钮行 -->
+<div class="submit-row">
+  <button id="submitBtn">📤 提交数据</button>
 </div>
 
 <!-- 区段标签（严格对应列分组：A-D / E-I / J-K） -->
