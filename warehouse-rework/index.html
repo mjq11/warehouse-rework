@@ -302,27 +302,24 @@
       cursor: default;
     }
 
-    tbody input::placeholder { color: #c8d5e3; }
-
-    /* 自动计算格 */
-    .calc-cell {
-      background: #f0fdf4;
-      text-align: center;
-      font-weight: 700;
-      color: #15803d;
-      font-size: 12px;
-      user-select: none;
-      cursor: default;
-      padding: 0 4px;
-      white-space: nowrap;
+    tbody input:focus {
+      background: #e8f2ff;
+      border: 1px solid #93c5fd;
+      padding: 5px 6px;
     }
 
-    .calc-cell.status-cell {
-      background: #eff6ff;
-      color: #1d4ed8;
+    /* 累加扫码格：包装辅料 / 入库配件 */
+    tbody input.accum-input {
+      background: #fffbf0;
     }
 
-    /* 列分组分隔线 */
+    tbody input.accum-input:focus {
+      background: #fffbea;
+      border-color: #f59e0b;
+      padding: 5px 6px;
+    }
+
+    tbody input[readonly] {
     .col-b { border-left: 2px solid #ccd5e0 !important; }
     .col-e { border-left: 2px solid #a0b4c8 !important; }
     .col-j { border-left: 2px solid #ccd5e0 !important; }
@@ -537,7 +534,7 @@ function startQR() {
 }
 
 // ── 表格构建 ──
-const SCAN_COLS   = ['tracking','sku','qty','accessory','extracted'];
+const SCAN_COLS   = ['tracking','sku','qty'];
 const ROW_INIT    = 50;
 let rowCount = 0;
 let rows     = [];
@@ -562,7 +559,7 @@ function makeRow(isPre) {
     <td class="col-e"><input type="text" data-col="date"       data-row="${id}" readonly tabindex="-1"></td>
     <td><input type="text" data-col="startTime"   data-row="${id}" readonly tabindex="-1"></td>
     <td><input type="text" data-col="endTime"     data-row="${id}" readonly tabindex="-1"></td>
-    <td class="calc-cell"  data-col="spent"   data-row="${id}"></td>
+    <td data-col="spent" data-row="${id}"></td>
     <td class="status-cell" data-col="status" data-row="${id}">
       <select data-col="status" data-row="${id}">
         <option value="">—</option>
@@ -572,8 +569,8 @@ function makeRow(isPre) {
         <option value="SC">SC</option>
       </select>
     </td>
-    <td class="col-j"><input type="text" data-col="accessory" data-row="${id}" placeholder="扫码" autocomplete="off"></td>
-    <td><input type="text" data-col="extracted" data-row="${id}" placeholder="扫码" autocomplete="off"></td>
+    <td class="col-j"><input type="text" data-col="accessory" data-row="${id}" placeholder="扫码累加" class="accum-input"></td>
+    <td><input type="text" data-col="extracted" data-row="${id}" placeholder="扫码累加" class="accum-input"></td>
   `;
 
   // 默认日期
@@ -621,39 +618,72 @@ function refreshCalc(rd) {
 }
 
 // ── 光标流转 ──
-function nextCol(col) {
-  const i = SCAN_COLS.indexOf(col);
-  return i < SCAN_COLS.length - 1 ? SCAN_COLS[i + 1] : null;
-}
-
 function jumpTo(rowId, col) {
+  if (!col) return;
   const idx = rows.findIndex(r => r.id === rowId);
-  if (!col) {
-    // K列之后 → 下一行 B
-    const ni = idx + 1;
-    if (ni < rows.length) {
-      const inp = rows[ni]._el.querySelector('[data-col="tracking"]');
-      if (inp) setTimeout(() => { inp.focus(); inp.select(); }, 15);
-    } else {
-      addRow();
-    }
-    return;
-  }
   const inp = rows[idx]._el.querySelector(`[data-col="${col}"]`);
   if (inp) setTimeout(() => { inp.focus(); inp.select(); }, 15);
 }
 
 function bindFlow() {
+  // 正常扫码流转：tracking → sku → qty（到 qty 后停在原地，不跳）
   SCAN_COLS.forEach(col => {
     rows.forEach(rd => {
-      const inp = rd._el.querySelector(`[data-col="${col}"]`);
+      const inp = rd._el.querySelector(`input[data-col="${col}"]`);
       if (!inp) return;
       inp.addEventListener('input', () => {
         rd[col] = inp.value.trim();
-        setTimeout(() => jumpTo(rd.id, nextCol(col)), 40);
+        const i = SCAN_COLS.indexOf(col);
+        if (i < SCAN_COLS.length - 1) {
+          // qty 之后不跳，让用户手动按 Enter 或 Tab
+        } else {
+          // tracking/sku 跳下一列
+          const next = SCAN_COLS[i + 1];
+          if (next) setTimeout(() => jumpTo(rd.id, next), 40);
+        }
       });
       inp.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault(); jumpTo(rd.id, nextCol(col)); }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const i = SCAN_COLS.indexOf(col);
+          if (i < SCAN_COLS.length - 1) {
+            jumpTo(rd.id, SCAN_COLS[i + 1]);
+          } else {
+            inp.blur();
+          }
+        }
+      });
+    });
+  });
+
+  // 累加扫码：包装辅料 / 入库配件（扫码累加，不跳下一行）
+  const ACCUM_COLS = ['accessory', 'extracted'];
+  ACCUM_COLS.forEach(col => {
+    rows.forEach(rd => {
+      const inp = rd._el.querySelector(`input[data-col="${col}"]`);
+      if (!inp) return;
+
+      // 聚焦时清掉末尾多余分隔符，保持整洁
+      inp.addEventListener('focus', () => {
+        inp.value = inp.value.replace(/、+$/, '');
+        rd[col] = inp.value;
+      });
+
+      // 输入完（通过 Enter 确认），追加分隔符，停留在当前格
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          inp.value = inp.value.replace(/、+$/, '');
+          if (inp.value) inp.value += '、';
+          rd[col] = inp.value;
+          // 保持在本格，准备下一次扫码
+          setTimeout(() => { inp.focus(); }, 10);
+        }
+      });
+
+      // 记录数据
+      inp.addEventListener('input', () => {
+        rd[col] = inp.value;
       });
     });
   });
