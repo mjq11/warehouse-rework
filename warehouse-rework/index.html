@@ -160,25 +160,30 @@
       border-radius: 4px;
     }
 
-    /* ── 区段标签 ── */
-    .section-labels {
+    /* ── 区段标签行 ── */
+    .section-labels-row {
       width: 100%;
       max-width: 1100px;
-      display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
+      display: grid;
+      grid-template-columns: 4fr 5fr 2fr; /* A-D:4格 E-I:5格 J-K:2格 */
+      margin-bottom: 2px;
+      gap: 3px;
     }
 
     .sec-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 700;
       color: #fff;
-      background: linear-gradient(135deg, #3b82f6, #60a5fa);
-      border-radius: 4px;
-      padding: 3px 10px;
-      letter-spacing: 1px;
+      border-radius: 5px;
+      padding: 5px 10px;
+      letter-spacing: 1.5px;
+      white-space: nowrap;
     }
 
+    .sec-badge.blue   { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
     .sec-badge.orange { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
     .sec-badge.green  { background: linear-gradient(135deg, #10b981, #34d399); }
 
@@ -296,7 +301,7 @@
       color: #1d4ed8;
     }
 
-    /* 列分隔线 */
+    /* 列分组分隔线 */
     .col-b { border-left: 2px solid #ccd5e0 !important; }
     .col-e { border-left: 2px solid #a0b4c8 !important; }
     .col-j { border-left: 2px solid #ccd5e0 !important; }
@@ -341,11 +346,8 @@
       transform: translateY(-1px);
     }
 
-    .add-btn:active {
-      transform: translateY(0);
-    }
+    .add-btn:active { transform: translateY(0); }
 
-    /* QR 刷新动画 */
     @keyframes qrPulse {
       0%   { opacity: 1; transform: scale(1); }
       40%  { opacity: 0.4; transform: scale(0.96); }
@@ -384,11 +386,11 @@
   <div id="qrcode"></div>
 </div>
 
-<!-- 区段标签 -->
-<div class="section-labels">
-  <span class="sec-badge">订单基础信息</span>
-  <span class="sec-badge orange">拆检结果及工时</span>
-  <span class="sec-badge green">产生费用</span>
+<!-- 区段标签（严格对应列分组：A-D / E-I / J-K） -->
+<div class="section-labels-row">
+  <div class="sec-badge blue">订单基础信息</div>
+  <div class="sec-badge orange">拆检结果及工时</div>
+  <div class="sec-badge green">产生费用</div>
 </div>
 
 <!-- 数据表格 -->
@@ -396,7 +398,11 @@
   <table id="dataTable">
     <thead>
       <tr>
-        <th class="row-num">#</th>
+        <!-- A: 序号 — 订单基础信息 -->
+        <th class="row-num">
+          <span class="cn">序号</span>
+        </th>
+        <!-- B-D: 订单基础信息 -->
         <th class="col-b">
           <span class="cn">退货物流单号</span>
           <span class="en">return tracking number</span>
@@ -409,6 +415,7 @@
           <span class="cn">实收数量</span>
           <span class="en">Received qty</span>
         </th>
+        <!-- E-I: 拆检结果及工时 -->
         <th class="col-e">
           <span class="cn">拆检日期</span>
           <span class="en">Rework date</span>
@@ -429,6 +436,7 @@
           <span class="cn">拆检结果</span>
           <span class="en">status</span>
         </th>
+        <!-- J-K: 产生费用 -->
         <th class="col-j">
           <span class="cn">包装辅料消耗SKU</span>
           <span class="en">accessory used SKU</span>
@@ -458,7 +466,9 @@ function getNY() {
 
 function nyDateStr() {
   const d = getNY();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
 }
 
 function nyTimeFull() {
@@ -476,9 +486,8 @@ function nyTimeHM() {
 }
 
 // ── 拆检结果计算 ──
-function calcStatus(row) {
-  const s = row.startTime;
-  const e = row.endTime;
+function calcStatus(rd) {
+  const s = rd.startTime, e = rd.endTime;
   if (!s || !e) return '';
   const toS = t => {
     const p = t.split(':').map(Number);
@@ -525,17 +534,19 @@ function startQR() {
 }
 
 // ── 表格构建 ──
-const SCAN_COLS = ['tracking','sku','qty','accessory','extracted'];
-const ALL_INPUT_COLS = ['tracking','sku','qty','date','startTime','endTime','accessory','extracted'];
-const ROW_INIT = 50;
+const SCAN_COLS   = ['tracking','sku','qty','accessory','extracted'];
+const ROW_INIT    = 50;
 let rowCount = 0;
-let rows = [];
+let rows     = [];
 
 function makeRow(isPre) {
   rowCount++;
   const id = rowCount;
-  const rd = { id, tracking:'', sku:'', qty:'', date: nyDateStr(),
-               startTime:'', endTime:'', accessory:'', extracted:'', _el: null };
+  const rd = {
+    id, tracking:'', sku:'', qty:'', date: nyDateStr(),
+    startTime:'', endTime:'', accessory:'', extracted:'',
+    _el: null
+  };
 
   const tr = document.createElement('tr');
   tr.className = isPre ? 'predefined-row' : 'extra-row';
@@ -548,7 +559,7 @@ function makeRow(isPre) {
     <td class="col-e"><input type="text" data-col="date"       data-row="${id}" readonly tabindex="-1"></td>
     <td><input type="text" data-col="startTime"   data-row="${id}" readonly tabindex="-1"></td>
     <td><input type="text" data-col="endTime"     data-row="${id}" readonly tabindex="-1"></td>
-    <td class="calc-cell"  data-col="spent"   data-row="${id}"></td>
+    <td class="calc-cell"         data-col="spent"   data-row="${id}"></td>
     <td class="calc-cell status-cell" data-col="status" data-row="${id}"></td>
     <td class="col-j"><input type="text" data-col="accessory" data-row="${id}" placeholder="扫码" autocomplete="off"></td>
     <td><input type="text" data-col="extracted" data-row="${id}" placeholder="扫码" autocomplete="off"></td>
@@ -570,9 +581,6 @@ function makeRow(isPre) {
         rd.endTime = nyTimeHM();
         refreshCalc(rd);
       }
-      if (col === 'date' && !inp.value) {
-        inp.value = rd.date = nyDateStr();
-      }
     });
   });
 
@@ -592,8 +600,9 @@ function refreshCalc(rd) {
   if (!el) return;
   el.querySelector('[data-col="startTime"]').value = rd.startTime || '';
   el.querySelector('[data-col="endTime"]').value   = rd.endTime   || '';
-  el.querySelector('[data-col="spent"]').textContent   = rd.startTime && rd.endTime ? calcStatus(rd).replace('✓ ','') : '';
-  el.querySelector('[data-col="status"]').textContent = calcStatus(rd);
+  const raw = rd.startTime && rd.endTime ? calcStatus(rd) : '';
+  el.querySelector('[data-col="spent"]').textContent   = raw.replace('✓ ','');
+  el.querySelector('[data-col="status"]').textContent = raw;
 }
 
 // ── 光标流转 ──
@@ -660,7 +669,7 @@ function addRow() {
 
 function updateCount() {
   const filled = rows.filter(r => r.tracking).length;
-  const extra = rows.filter((_,i) => i >= ROW_INIT).length;
+  const extra  = rows.length - ROW_INIT;
   document.getElementById('countInfo').textContent =
     `已录入 ${filled} / ${rows.length} 行${extra ? `（含 ${extra} 行额外）` : ''}`;
 }
