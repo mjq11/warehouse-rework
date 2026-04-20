@@ -607,8 +607,8 @@ function makeRow(isPre) {
     <td><input type="text" data-col="sku"         data-row="${id}" placeholder="扫码" autocomplete="off"></td>
     <td><input type="text" data-col="qty"         data-row="${id}" placeholder="扫码" autocomplete="off" value="1"></td>
     <td class="col-e"><input type="text" data-col="date"       data-row="${id}" readonly tabindex="-1"></td>
-    <td><input type="text" data-col="startTime"   data-row="${id}" readonly tabindex="-1"></td>
-    <td><input type="text" data-col="endTime"     data-row="${id}" readonly tabindex="-1"></td>
+    <td><input type="text" data-col="startTime"   data-row="${id}" placeholder="扫码" autocomplete="off"></td>
+    <td><input type="text" data-col="endTime"     data-row="${id}" placeholder="扫码" autocomplete="off"></td>
     <td data-col="spent" data-row="${id}"></td>
     <td class="status-cell" data-col="status" data-row="${id}">
       <select data-col="status" data-row="${id}">
@@ -627,21 +627,21 @@ function makeRow(isPre) {
   tr.querySelector('[data-col="date"]').value = rd.date;
   tr.querySelector('[data-col="qty"]').value   = rd.qty;
 
-  // focus 事件：自动填时间
-  tr.querySelectorAll('input').forEach(inp => {
-    inp.addEventListener('focus', () => {
-      const col = inp.dataset.col;
-      if (col === 'startTime' && !rd.startTime) {
-        rd.startTime = nyTimeHM();
-        rd.endTime = '';
-        refreshCalc(rd);
-      }
-      if (col === 'endTime') {
-        rd.endTime = nyTimeHM();
-        refreshCalc(rd);
-      }
-    });
-  });
+  // focus 事件：扫码枪录入时间，不再自动取值
+  // tr.querySelectorAll('input').forEach(inp => {
+  //   inp.addEventListener('focus', () => {
+  //     const col = inp.dataset.col;
+  //     if (col === 'startTime' && !rd.startTime) {
+  //       rd.startTime = nyTimeHM();
+  //       rd.endTime = '';
+  //       refreshCalc(rd);
+  //     }
+  //     if (col === 'endTime') {
+  //       rd.endTime = nyTimeHM();
+  //       refreshCalc(rd);
+  //     }
+  //   });
+  // });
 
   // input 事件：记录数据
   tr.querySelectorAll('input[data-col]').forEach(inp => {
