@@ -558,7 +558,7 @@ function renderQR() {
   const el = document.getElementById('qrcode');
   _qrEl = el;
 
-  const ts = nyDateStr() + ' ' + nyTimeFull();
+  const ts = nyTimeFull();
   document.getElementById('qrTime').textContent = nyTimeFull();
   document.getElementById('qrDate').textContent = nyDateStr();
 
