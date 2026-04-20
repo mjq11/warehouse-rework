@@ -876,7 +876,7 @@ document.getElementById('addRowBtn').addEventListener('click', addRow);
 // 提交功能配置
 // ═══════════════════════════════════════════════════════════════
 // 【重要】请将下面的 URL 替换为你部署的 Google Apps Script Web 应用 URL
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxYvZAb-nqRWrzPuAGWybC1yDMQZaF0qf4JdrfzY093etwhWUJax2H3EVykjT1cqg/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbybigULEW1MHlqCxdOdU2FLSYEyMRJgz0duD3ipsg/dev';
 
 // ═══════════════════════════════════════════════════════════════
 // 提交功能
@@ -897,11 +897,13 @@ function showToast(msg, isError = false) {
 
 function collectData() {
   const coworker = document.getElementById('coworkerInput').value.trim() || '未填写';
+  const submitTime = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
   const filledRows = rows.filter(r => r.tracking && r.tracking.trim());
   if (filledRows.length === 0) {
     return null; // 没有有效数据
   }
   
+  // 按 Google Script 格式：每行包含 coworker 和 submitTime
   const rowDataList = filledRows.map((rd, idx) => ({
     index: idx + 1,
     tracking: rd.tracking || '',
@@ -911,16 +913,14 @@ function collectData() {
     startTime: rd.startTime || '',
     endTime: rd.endTime || '',
     spent: rd.spent || '',
-    status: rd.status || '',
-    accessory: rd.accessory || '',
-    extracted: rd.extracted || ''
+    result: rd.status || '',     // 拆检结果
+    j: rd.accessory || '',       // 包装辅料消耗SKU
+    k: rd.extracted || '',       // 入库配件拆检SKU
+    coworker: coworker,
+    submitTime: submitTime
   }));
   
-  return {
-    coworker: coworker,
-    submitTime: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
-    rows: rowDataList
-  };
+  return { rows: rowDataList };
 }
 
 async function submitData() {
@@ -949,7 +949,7 @@ async function submitData() {
     
     const result = await response.json();
     if (result.success) {
-      showToast('✓ ' + result.message);
+      showToast('✓ 提交成功！共 ' + result.count + ' 条记录');
       // 清空已提交的数据
       rows.forEach(rd => {
         rd.tracking = rd.sku = rd.qty = rd.startTime = rd.endTime = 
