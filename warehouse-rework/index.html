@@ -645,10 +645,14 @@ function makeRow(isPre) {
   //   });
   // });
 
-  // input 事件：记录数据
+  // input 事件：记录数据 & 实时计算工时
   tr.querySelectorAll('input[data-col]').forEach(inp => {
     inp.addEventListener('input', () => {
       rd[inp.dataset.col] = inp.value.trim();
+      // startTime/endTime 变化时重新计算工时
+      if (inp.dataset.col === 'startTime' || inp.dataset.col === 'endTime') {
+        refreshCalc(rd);
+      }
     });
   });
 
