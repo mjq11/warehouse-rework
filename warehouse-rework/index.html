@@ -375,24 +375,24 @@
     }
 
     .add-btn {
-      padding: 12px 32px;
-      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      padding: 14px 36px;
+      background: linear-gradient(135deg, #1d4ed8, #3b82f6);
       color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-size: 15px;
+      border: 2px solid #3b82f6;
+      border-radius: 12px;
+      font-size: 16px;
       font-weight: 700;
       cursor: pointer;
       font-family: inherit;
-      box-shadow: 0 3px 12px rgba(59,130,246,0.3);
+      box-shadow: 0 4px 16px rgba(59,130,246,0.4);
       transition: all 0.2s;
       letter-spacing: 1px;
     }
 
     .add-btn:hover {
-      background: linear-gradient(135deg, #2563eb, #3b82f6);
-      box-shadow: 0 4px 16px rgba(59,130,246,0.4);
-      transform: translateY(-1px);
+      background: linear-gradient(135deg, #1e40af, #2563eb);
+      box-shadow: 0 6px 20px rgba(59,130,246,0.5);
+      transform: translateY(-2px);
     }
 
     .add-btn:active { transform: translateY(0); }
@@ -420,6 +420,37 @@
 
     .submit-btn:active { transform: translateY(0); }
     .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    /* 右侧固定竖排提交按钮 */
+    .submit-btn-fixed {
+      position: fixed;
+      right: 30px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 6px 24px rgba(22,163,74,0.4);
+      transition: all 0.2s;
+      padding: 16px 12px;
+      line-height: 1.8;
+      letter-spacing: 2px;
+      z-index: 1000;
+    }
+
+    .submit-btn-fixed:hover {
+      background: linear-gradient(135deg, #15803d, #16a34a);
+      box-shadow: 0 8px 32px rgba(22,163,74,0.5);
+      transform: translateY(-50%) scale(1.05);
+    }
+
+    .submit-btn-fixed:active { transform: translateY(-50%) scale(0.98); }
+    .submit-btn-fixed:disabled { opacity: 0.6; cursor: not-allowed; transform: translateY(-50%); }
 
     .submit-toast {
       position: fixed;
@@ -550,8 +581,10 @@
 <div class="bottom-bar">
   <span class="count-info" id="countInfo"></span>
   <button class="add-btn" id="addRowBtn">+ 添加行</button>
-  <button class="submit-btn" id="submitBtn">📤 提交数据</button>
 </div>
+
+<!-- 右侧竖排提交按钮 -->
+<button class="submit-btn-fixed" id="submitBtn">📤<br>提<br>交<br>数<br>据</button>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
