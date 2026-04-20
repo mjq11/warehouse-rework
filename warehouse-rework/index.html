@@ -410,7 +410,7 @@
 <!-- 页面标题区 -->
 <div class="page-header">
   <div>
-    <div class="title">仓库拆检登记系统表</div>
+    <div class="title">仓库拆检登记系统</div>
     <div class="subtitle">WAREHOUSE REWORK TRACKING SYSTEM</div>
   </div>
   <div class="header-meta">
@@ -584,7 +584,9 @@ function startQR() {
 }
 
 // ── 表格构建 ──
-const SCAN_COLS   = ['tracking','sku','qty'];
+// 扫码流转：tracking → sku → 跳到 startTime（跳过 C/D/E）
+const SCAN_COLS   = ['tracking','sku'];
+const JUMP_AFTER_QTY = 'startTime';  // qty 输入后跳到此列
 const ROW_INIT    = 50;
 let rowCount = 0;
 let rows     = [];
@@ -678,35 +680,49 @@ function jumpTo(rowId, col) {
 }
 
 function bindFlow() {
-  // 正常扫码流转：tracking → sku → qty（到 qty 后停在原地，不跳）
-  SCAN_COLS.forEach(col => {
-    rows.forEach(rd => {
-      const inp = rd._el.querySelector(`input[data-col="${col}"]`);
-      if (!inp) return;
-      inp.addEventListener('input', () => {
-        rd[col] = inp.value.trim();
+  // 扫码流转：tracking → sku → startTime（跳过 C/D/E 列）
+// 实收数量(qty)输入完成后也跳到 startTime
+SCAN_COLS.forEach(col => {
+  rows.forEach(rd => {
+    const inp = rd._el.querySelector(`input[data-col="${col}"]`);
+    if (!inp) return;
+    inp.addEventListener('input', () => {
+      rd[col] = inp.value.trim();
+      const i = SCAN_COLS.indexOf(col);
+      if (i < SCAN_COLS.length - 1) {
+        const next = SCAN_COLS[i + 1];
+        if (next) setTimeout(() => jumpTo(rd.id, next), 40);
+      }
+    });
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
         const i = SCAN_COLS.indexOf(col);
         if (i < SCAN_COLS.length - 1) {
-          // qty 之后不跳，让用户手动按 Enter 或 Tab
+          jumpTo(rd.id, SCAN_COLS[i + 1]);
         } else {
-          // tracking/sku 跳下一列
-          const next = SCAN_COLS[i + 1];
-          if (next) setTimeout(() => jumpTo(rd.id, next), 40);
+          inp.blur();
         }
-      });
-      inp.addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          const i = SCAN_COLS.indexOf(col);
-          if (i < SCAN_COLS.length - 1) {
-            jumpTo(rd.id, SCAN_COLS[i + 1]);
-          } else {
-            inp.blur();
-          }
-        }
-      });
+      }
     });
   });
+});
+
+// qty 输入完成后跳到 startTime
+rows.forEach(rd => {
+  const qtyInp = rd._el.querySelector('input[data-col="qty"]');
+  if (!qtyInp) return;
+  qtyInp.addEventListener('input', () => {
+    rd.qty = qtyInp.value.trim();
+    if (JUMP_AFTER_QTY) setTimeout(() => jumpTo(rd.id, JUMP_AFTER_QTY), 40);
+  });
+  qtyInp.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (JUMP_AFTER_QTY) jumpTo(rd.id, JUMP_AFTER_QTY);
+    }
+  });
+});
 
   // 累加扫码：包装辅料 / 入库配件（扫码累加，不跳下一行）
   const ACCUM_COLS = ['accessory', 'extracted'];
