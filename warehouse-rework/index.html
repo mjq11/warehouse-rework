@@ -397,6 +397,52 @@
 
     .add-btn:active { transform: translateY(0); }
 
+    .submit-btn {
+      padding: 9px 24px;
+      background: linear-gradient(135deg, #16a34a, #22c55e);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      box-shadow: 0 3px 12px rgba(22,163,74,0.3);
+      transition: all 0.2s;
+      letter-spacing: 1px;
+    }
+
+    .submit-btn:hover {
+      background: linear-gradient(135deg, #15803d, #16a34a);
+      box-shadow: 0 4px 16px rgba(22,163,74,0.4);
+      transform: translateY(-1px);
+    }
+
+    .submit-btn:active { transform: translateY(0); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .submit-toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: #fff;
+      border: 1px solid #e0e6ef;
+      border-radius: 10px;
+      padding: 12px 24px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      font-size: 14px;
+      font-weight: 600;
+      z-index: 9999;
+      transition: transform 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .submit-toast.show { transform: translateX(-50%) translateY(0); }
+    .submit-toast.success { color: #16a34a; }
+    .submit-toast.error   { color: #dc2626; }
+
     @keyframes qrPulse {
       0%   { opacity: 1; transform: scale(1); }
       40%  { opacity: 0.4; transform: scale(0.96); }
@@ -504,6 +550,7 @@
 <div class="bottom-bar">
   <span class="count-info" id="countInfo"></span>
   <button class="add-btn" id="addRowBtn">+ 添加行</button>
+  <button class="submit-btn" id="submitBtn">📤 提交数据</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
@@ -792,6 +839,107 @@ function updateCount() {
 }
 
 document.getElementById('addRowBtn').addEventListener('click', addRow);
+
+// ═══════════════════════════════════════════════════════════════
+// 提交功能配置
+// ═══════════════════════════════════════════════════════════════
+// 【重要】请将下面的 URL 替换为你部署的 Google Apps Script Web 应用 URL
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec';
+
+// ═══════════════════════════════════════════════════════════════
+// 提交功能
+// ═══════════════════════════════════════════════════════════════
+function showToast(msg, isError = false) {
+  let toast = document.getElementById('submitToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'submitToast';
+    toast.className = 'submit-toast';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.className = 'submit-toast ' + (isError ? 'error' : 'success');
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function collectData() {
+  const coworker = document.getElementById('coworkerInput').value.trim() || '未填写';
+  const filledRows = rows.filter(r => r.tracking && r.tracking.trim());
+  if (filledRows.length === 0) {
+    return null; // 没有有效数据
+  }
+  
+  const rowDataList = filledRows.map((rd, idx) => ({
+    index: idx + 1,
+    tracking: rd.tracking || '',
+    sku: rd.sku || '',
+    qty: rd.qty || '',
+    date: rd.date || '',
+    startTime: rd.startTime || '',
+    endTime: rd.endTime || '',
+    spent: rd.spent || '',
+    status: rd.status || '',
+    accessory: rd.accessory || '',
+    extracted: rd.extracted || ''
+  }));
+  
+  return {
+    coworker: coworker,
+    submitTime: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }),
+    rows: rowDataList
+  };
+}
+
+async function submitData() {
+  const btn = document.getElementById('submitBtn');
+  const data = collectData();
+  
+  if (!data) {
+    showToast('没有可提交的数据！请先录入至少一条记录', true);
+    return;
+  }
+  
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID')) {
+    showToast('请先配置 Google Apps Script URL！', true);
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.textContent = '提交中...';
+  
+  try {
+    const response = await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+    });
+    
+    const result = await response.json();
+    if (result.success) {
+      showToast('✓ ' + result.message);
+      // 清空已提交的数据
+      rows.forEach(rd => {
+        rd.tracking = rd.sku = rd.qty = rd.startTime = rd.endTime = 
+          rd.status = rd.accessory = rd.extracted = '';
+        rd._el.querySelectorAll('input').forEach(inp => inp.value = '');
+        rd._el.querySelector('[data-col="spent"]').textContent = '';
+        rd._el.querySelector('select').value = '';
+      });
+      document.getElementById('coworkerInput').value = '';
+      updateCount();
+    } else {
+      showToast('提交失败: ' + (result.message || '未知错误'), true);
+    }
+  } catch (e) {
+    showToast('提交失败: ' + e.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📤 提交数据';
+  }
+}
+
+document.getElementById('submitBtn').addEventListener('click', submitData);
 
 window.addEventListener('load', () => {
   document.getElementById('dateInput').value = nyDateStr();
