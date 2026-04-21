@@ -1077,20 +1077,21 @@ async function downloadTodayData() {
           spentVal,                 // H: 拆检工时
           r.result || '',           // I: 拆检结果
           r.j || '',                // J: 包装辅料消耗SKU
-          r.k || ''                 // K: 入库配件拆检SKU
+          r.k || '',                // K: 入库配件拆检SKU
+          r.coworker || ''          // L: 员工姓名
         ]);
       }
     }
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet([
-      ['序号','退货物流单号','实收SKU','实收数量','拆检日期','拆检开始时间','拆检结束时间','拆检工时','拆检结果','包装辅料消耗SKU','入库配件拆检SKU'],
+      ['序号','退货物流单号','实收SKU','实收数量','拆检日期','拆检开始时间','拆检结束时间','拆检工时','拆检结果','包装辅料消耗SKU','入库配件拆检SKU','员工姓名'],
       ...allRows
     ]);
     ws['!cols'] = [
       {wch:12},{wch:22},{wch:18},{wch:6},
       {wch:10},{wch:10},{wch:8},{wch:12},
-      {wch:22},{wch:22},{wch:12}
+      {wch:22},{wch:22},{wch:12},{wch:10}
     ];
     XLSX.utils.book_append_sheet(wb, ws, todayStr);
     XLSX.writeFile(wb, `拆检记录_${todayStr}.xlsx`);
