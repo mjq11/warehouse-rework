@@ -1024,9 +1024,12 @@ async function downloadTodayData() {
 
     const res = await fetch(FIREBASE_URL + 'submissions.json');
     if (!res.ok) throw new Error('HTTP ' + res.status);
-
-    const allData = await res.json();
-    if (!allData) { alert('Firebase 暂无数据'); return; }
+    const raw = await res.text();
+    console.log('[下载] Firebase raw:', raw.substring(0, 800));
+    let allData;
+    try { allData = JSON.parse(raw); } catch(e) { throw new Error('JSON解析失败: ' + raw.substring(0,100)); }
+    console.log('[下载] parsed:', allData);
+    if (!allData || typeof allData !== 'object') return;
 
     // 过滤今日（submitTime 存的是 UTC ISO，转北京时间后比对）
     const todayEntries = Object.entries(allData)
