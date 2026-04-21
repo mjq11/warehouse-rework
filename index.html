@@ -1112,19 +1112,24 @@ async function downloadData() {
     try { allData = JSON.parse(raw); } catch(e) { throw new Error('JSON解析失败: ' + raw.substring(0,100)); }
     if (!allData || typeof allData !== 'object') return;
 
-    // 过滤指定日期（submitTime 存的是 UTC ISO，转北京时间后比对）
+    // 过滤指定日期（submitTime 存的是 UTC ISO，转美西时间后比对）
     const targetEntries = Object.entries(allData)
       .filter(([, item]) => {
         if (!item || !item.submitTime) return false;
-        const bj = new Date(item.submitTime)
-          .toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' });
-        const p = bj.match(/\d+/g);
-        return `${p[0]}-${String(p[1]).padStart(2,'0')}-${String(p[2]).padStart(2,'0')}` === selectedDate;
+        const ny = new Date(item.submitTime)
+          .toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' });
+        const [m, d, y] = ny.split('/');
+        return `${y}-${m}-${d}` === selectedDate;
       })
       .sort((a, b) => (a[1]._submittedAt || 0) - (b[1]._submittedAt || 0));
 
     if (targetEntries.length === 0) {
-      const existingDates = [...new Set(Object.values(allData).map(i => i.submitTime?.substring(0,10)).filter(Boolean))].join(', ');
+      const existingDates = [...new Set(Object.values(allData).map(i => {
+        if (!i.submitTime) return null;
+        const ny = new Date(i.submitTime).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' });
+        const [m, d, y] = ny.split('/');
+        return `${y}-${m}-${d}`;
+      }).filter(Boolean))].join(', ');
       alert(`（${selectedDate}）暂无提交\n已有日期：${existingDates}`);
       return;
     }
@@ -1186,9 +1191,8 @@ async function downloadData() {
 }
 
 function getYesterdayStr() {
-  const now = new Date();
-  const bjStr = new Date(now.getTime() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-  const [y, m, d] = bjStr.split('-');
+  const ny = new Date().toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' });
+  const [m, d, y] = ny.split('/');
   return `${y}-${m}-${d}`;
 }
 
