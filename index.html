@@ -1112,25 +1112,24 @@ async function downloadData() {
     try { allData = JSON.parse(raw); } catch(e) { throw new Error('JSON解析失败: ' + raw.substring(0,100)); }
     if (!allData || typeof allData !== 'object') return;
 
-    // 过滤指定日期（submitTime 存的是 UTC ISO，转美西时间后比对）
+    // 过滤：按拆检日期（r.date，美西时间格式如 2026-04-20）匹配 selectedDate
     const targetEntries = Object.entries(allData)
       .filter(([, item]) => {
-        if (!item || !item.submitTime) return false;
-        const ny = new Date(item.submitTime)
-          .toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' });
-        const [m, d, y] = ny.split('/');
-        return `${y}-${m}-${d}` === selectedDate;
+        if (!item || !item.rows) return false;
+        const rowsRaw = item.rows;
+        const rowsArr = Array.isArray(rowsRaw) ? rowsRaw : (rowsRaw.rows || []);
+        return rowsArr.some(r => r.date === selectedDate);
       })
       .sort((a, b) => (a[1]._submittedAt || 0) - (b[1]._submittedAt || 0));
 
     if (targetEntries.length === 0) {
-      const existingDates = [...new Set(Object.values(allData).map(i => {
-        if (!i.submitTime) return null;
-        const ny = new Date(i.submitTime).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: '2-digit', day: '2-digit' });
-        const [m, d, y] = ny.split('/');
-        return `${y}-${m}-${d}`;
-      }).filter(Boolean))].join(', ');
-      alert(`（${selectedDate}）暂无提交\n已有日期：${existingDates}`);
+      const existingDates = [...new Set(Object.values(allData).flatMap(i => {
+        if (!i.rows) return [];
+        const rowsRaw = i.rows;
+        const rowsArr = Array.isArray(rowsRaw) ? rowsRaw : (rowsRaw.rows || []);
+        return rowsArr.map(r => r.date).filter(Boolean);
+      }))].join(', ');
+      alert(`（${selectedDate}）暂无提交\n已有拆检日期：${existingDates}`);
       return;
     }
 
@@ -1142,6 +1141,8 @@ async function downloadData() {
       const rowsRaw = item.rows || [];
       const rowsArr = Array.isArray(rowsRaw) ? rowsRaw : (rowsRaw.rows || []);
       for (const r of rowsArr) {
+        // 只导出拆检日期匹配 selectedDate 的行
+        if (r.date !== selectedDate) continue;
         // 工时：优先用已有值，否则动态计算
         let spentVal = r.spent || '';
         if (!spentVal && r.startTime && r.endTime) {
