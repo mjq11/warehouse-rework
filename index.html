@@ -974,7 +974,7 @@ function showToast(msg, isError = false) {
 }
 
 function collectData() {
-  const coworker = document.getElementById('coworkerInput').value.trim() || '未填写';
+  const coworker = document.getElementById('coworkerInput').value.trim();
   const submitTime = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
   const filledRows = rows.filter(r => r.tracking && r.tracking.trim());
   if (filledRows.length === 0) {
@@ -1003,6 +1003,15 @@ function collectData() {
 
 async function submitData() {
   const btn = document.getElementById('submitBtn');
+
+  // 员工姓名必填校验
+  const coworkerEl = document.getElementById('coworkerInput');
+  if (!coworkerEl.value.trim()) {
+    alert('⚠️ 请先填写员工姓名再提交！');
+    coworkerEl.focus();
+    return;
+  }
+
   const data = collectData();
 
   if (!data) {
