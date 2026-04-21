@@ -873,10 +873,9 @@ function updateCount() {
 document.getElementById('addRowBtn').addEventListener('click', addRow);
 
 // ═══════════════════════════════════════════════════════════════
-// 提交功能配置
+// 提交功能配置（Firebase Realtime Database）
 // ═══════════════════════════════════════════════════════════════
-// 【重要】请将下面的 URL 替换为你部署的 Google Apps Script Web 应用 URL
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxR7Wzfj_1Y7qG4SEpBhw1-pF0GdozMlDYlTN5t2B3j8-mbEkudzz-kT0vg55NkjME/exec';
+const FIREBASE_URL = 'https://maidesite-default-rtdb.firebaseio.com/';
 
 // ═══════════════════════════════════════════════════════════════
 // 提交功能
@@ -926,24 +925,32 @@ function collectData() {
 async function submitData() {
   const btn = document.getElementById('submitBtn');
   const data = collectData();
-  
+
   if (!data) {
     alert('请先录入至少一条记录');
     return;
   }
-  
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID')) {
-    alert('请先配置 Google Apps Script URL！');
+
+  if (!FIREBASE_URL) {
+    alert('请先配置 Firebase 数据库 URL！');
     return;
   }
-  
+
   btn.disabled = true;
   btn.textContent = '提交中...';
-  
+
   try {
-    const response = await fetch(GOOGLE_SCRIPT_URL, {
+    // 用时间戳作 key，自动去重
+    const submitTime = new Date().toISOString();
+    const payload = {
+      rows: data,
+      submitTime: submitTime,
+      _submittedAt: Date.now()
+    };
+
+    const response = await fetch(FIREBASE_URL + 'submissions.json', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
       headers: { 'Content-Type': 'application/json' }
     });
 
@@ -954,11 +961,11 @@ async function submitData() {
     }
 
     const result = await response.json();
-    if (result.success) {
-      alert('Submission successful');
+    if (result.name) {
+      alert('✅ 提交成功！数据已保存');
       // 清空已提交的数据
       rows.forEach(rd => {
-        rd.tracking = rd.sku = rd.qty = rd.startTime = rd.endTime = 
+        rd.tracking = rd.sku = rd.qty = rd.startTime = rd.endTime =
           rd.status = rd.accessory = rd.extracted = '';
         rd._el.querySelectorAll('input').forEach(inp => inp.value = '');
         rd._el.querySelector('[data-col="spent"]').textContent = '';
@@ -967,13 +974,12 @@ async function submitData() {
       document.getElementById('coworkerInput').value = '';
       updateCount();
     } else {
-      alert('提交失败: ' + (result.message || '未知错误'));
+      alert('提交失败: ' + JSON.stringify(result));
     }
   } catch (e) {
-    // 提供更详细的错误信息方便排查
     let msg = e.message;
     if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network')) {
-      msg = '网络错误，请确认提交地址正确且网络畅通';
+      msg = '网络错误，请检查网络连接';
     }
     alert('提交失败: ' + msg);
   } finally {
