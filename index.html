@@ -928,12 +928,12 @@ async function submitData() {
   const data = collectData();
   
   if (!data) {
-    showToast('没有可提交的数据！请先录入至少一条记录', true);
+    alert('请先录入至少一条记录');
     return;
   }
   
   if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL.includes('YOUR_DEPLOYMENT_ID')) {
-    showToast('请先配置 Google Apps Script URL！', true);
+    alert('请先配置 Google Apps Script URL！');
     return;
   }
   
@@ -949,7 +949,7 @@ async function submitData() {
     
     const result = await response.json();
     if (result.success) {
-      showToast('✓ 提交成功！共 ' + result.count + ' 条记录');
+      alert('Submission successful');
       // 清空已提交的数据
       rows.forEach(rd => {
         rd.tracking = rd.sku = rd.qty = rd.startTime = rd.endTime = 
@@ -961,10 +961,10 @@ async function submitData() {
       document.getElementById('coworkerInput').value = '';
       updateCount();
     } else {
-      showToast('提交失败: ' + (result.message || '未知错误'), true);
+      alert('提交失败: ' + (result.message || '未知错误'));
     }
   } catch (e) {
-    showToast('提交失败: ' + e.message, true);
+    alert('提交失败: ' + e.message);
   } finally {
     btn.disabled = false;
     btn.textContent = '📤 提交数据';
