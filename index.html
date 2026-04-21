@@ -163,43 +163,28 @@
       max-width: 1100px;
       display: flex;
       justify-content: flex-end;
-      gap: 12px;
       padding: 8px 0;
       margin-bottom: 4px;
     }
 
     .submit-row button {
+      background: linear-gradient(135deg, #16a34a, #22c55e);
       color: #fff;
-      border: 2px solid;
+      border: 2px solid #4ade80;
       border-radius: 10px;
       font-size: 16px;
       font-weight: 700;
       cursor: pointer;
       font-family: inherit;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      box-shadow: 0 4px 16px rgba(22,163,74,0.4);
       transition: all 0.2s;
-      padding: 10px 24px;
+      padding: 10px 28px;
       letter-spacing: 2px;
     }
 
-    #submitBtn {
-      background: linear-gradient(135deg, #16a34a, #22c55e);
-      border-color: #4ade80;
-      box-shadow: 0 4px 16px rgba(22,163,74,0.4);
-    }
-    #submitBtn:hover {
+    .submit-row button:hover {
       background: linear-gradient(135deg, #15803d, #16a34a);
       box-shadow: 0 6px 20px rgba(22,163,74,0.5);
-    }
-
-    #downloadBtn {
-      background: linear-gradient(135deg, #1d4ed8, #3b82f6);
-      border-color: #93c5fd;
-      box-shadow: 0 4px 16px rgba(59,130,246,0.4);
-    }
-    #downloadBtn:hover {
-      background: linear-gradient(135deg, #1e40af, #1d4ed8);
-      box-shadow: 0 6px 20px rgba(59,130,246,0.5);
     }
 
     .submit-row button:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -527,7 +512,6 @@
 <!-- 提交按钮行 -->
 <div class="submit-row">
   <button id="submitBtn">📤 提交数据</button>
-  <button id="downloadBtn" class="download-btn">📥 下载今日数据</button>
 </div>
 
 <!-- 区段标签（严格对应列分组：A-D / E-I / J-K） -->
@@ -601,8 +585,6 @@
   <button class="add-btn" id="addRowBtn">+ 添加行</button>
 </div>
 
-<!-- SheetJS for Excel export -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
 // ── 时区工具 ──
@@ -1007,126 +989,6 @@ async function submitData() {
 }
 
 document.getElementById('submitBtn').addEventListener('click', submitData);
-
-// ═══════════════════════════════════════════════════════════════
-// 下载今日数据（Excel）
-// ═══════════════════════════════════════════════════════════════
-async function downloadTodayData() {
-  const btn = document.getElementById('downloadBtn');
-  btn.disabled = true;
-  btn.textContent = '⏳ 加载中...';
-
-  try {
-    // 读取今日提交（美东时区）
-    const todayNY = new Date().toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' });
-    const [m, d, y] = todayNY.split('/');
-    const todayStr = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-
-    // 读取今日提交（北京时间）
-    const todayBJ = new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' });
-    const [y, m, d] = todayBJ.match(/\d+/g);
-    const todayStr = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
-
-    const res = await fetch(FIREBASE_URL + 'submissions.json');
-    if (!res.ok) throw new Error('读取数据失败: HTTP ' + res.status);
-
-    const allData = await res.json();
-    if (!allData) {
-      alert('Firebase 中暂无任何数据');
-      return;
-    }
-
-    // 调试：显示所有数据的 submitTime
-    const dates = new Set();
-    Object.values(allData).forEach(item => {
-      if (item && item.submitTime) dates.add(item.submitTime.substring(0, 10));
-    });
-    console.log('Firebase 中的所有 submitTime 日期:', [...dates]);
-    console.log('期望的今日日期:', todayStr);
-
-    // 筛选今日数据（submitTime = ISO 格式 UTC，转换成北京时间）
-    const todayEntries = Object.entries(allData)
-      .filter(([id, item]) => {
-        if (!item || !item.submitTime) return false;
-        // submitTime 是 UTC ISO 字符串，转成北京时间后取日期
-        const bjDate = new Date(item.submitTime).toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' });
-        const [y2, m2, d2] = bjDate.match(/\d+/g);
-        return `${y2}-${m2.padStart(2,'0')}-${d2.padStart(2,'0')}` === todayStr;
-      })
-      .sort((a, b) => (a[1]._submittedAt || 0) - (b[1]._submittedAt || 0));
-
-    if (todayEntries.length === 0) {
-      const allDates = [...dates].join(', ') || '无';
-      alert(`今日（${todayStr}）暂无提交数据\nFirebase 中的日期：${allDates}`);
-      return;
-    }
-
-    // 合并所有行的数据
-    const allRows = [];
-    for (const [id, item] of todayEntries) {
-      if (item.rows) {
-        item.rows.forEach(row => {
-          const r = row;
-          allRows.push([
-            r.date || todayStr,
-            r.tracking || '',
-            r.sku || '',
-            r.qty || '',
-            r.startTime || '',
-            r.endTime || '',
-            r.spent || '',
-            r.result || '',
-            r.j || '',
-            r.k || '',
-            r.coworker || ''
-          ]);
-        });
-      }
-    }
-
-    if (allRows.length === 0) {
-      alert(`今日（${todayStr}）暂无有效记录`);
-      return;
-    }
-
-    // 生成 Excel
-    const wb = XLSX.utils.book_new();
-    const wsData = [
-      ['拆检日期', '快递单号', 'SKU', '数量', '开始时间', '结束时间', '工时', '拆检结果', '配件', '提取物', '拆检员'],
-      ...allRows
-    ];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-    // 设置列宽
-    ws['!cols'] = [
-      { wch: 12 }, // 拆检日期
-      { wch: 20 }, // 快递单号
-      { wch: 18 }, // SKU
-      { wch: 6 },  // 数量
-      { wch: 10 }, // 开始时间
-      { wch: 10 }, // 结束时间
-      { wch: 8 },  // 工时
-      { wch: 12 }, // 拆检结果
-      { wch: 20 }, // 配件
-      { wch: 20 }, // 提取物
-      { wch: 12 }  // 拆检员
-    ];
-
-    XLSX.utils.book_append_sheet(wb, ws, todayStr);
-
-    const filename = `拆检记录_${todayStr}.xlsx`;
-    XLSX.writeFile(wb, filename);
-
-    alert(`✅ 已导出 ${allRows.length} 条记录\n${filename}`);
-  } catch (e) {
-    alert('下载失败: ' + e.message);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = '📥 下载今日数据';
-  }
-}
-
-document.getElementById('downloadBtn').addEventListener('click', downloadTodayData);
 
 window.addEventListener('load', () => {
   document.getElementById('dateInput').value = nyDateStr();
