@@ -1022,9 +1022,9 @@ async function downloadTodayData() {
     const [m, d, y] = todayNY.split('/');
     const todayStr = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
 
-    // 读取今日提交（美东时区）
-    const todayNY = new Date().toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' });
-    const [m, d, y] = todayNY.split('/');
+    // 读取今日提交（北京时间）
+    const todayBJ = new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' });
+    const [y, m, d] = todayBJ.match(/\d+/g);
     const todayStr = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
 
     const res = await fetch(FIREBASE_URL + 'submissions.json');
@@ -1044,11 +1044,14 @@ async function downloadTodayData() {
     console.log('Firebase 中的所有 submitTime 日期:', [...dates]);
     console.log('期望的今日日期:', todayStr);
 
-    // 筛选今日数据
+    // 筛选今日数据（submitTime = ISO 格式 UTC，转换成北京时间）
     const todayEntries = Object.entries(allData)
       .filter(([id, item]) => {
         if (!item || !item.submitTime) return false;
-        return item.submitTime.startsWith(todayStr);
+        // submitTime 是 UTC ISO 字符串，转成北京时间后取日期
+        const bjDate = new Date(item.submitTime).toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' });
+        const [y2, m2, d2] = bjDate.match(/\d+/g);
+        return `${y2}-${m2.padStart(2,'0')}-${d2.padStart(2,'0')}` === todayStr;
       })
       .sort((a, b) => (a[1]._submittedAt || 0) - (b[1]._submittedAt || 0));
 
