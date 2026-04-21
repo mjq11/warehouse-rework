@@ -1050,22 +1050,31 @@ async function downloadTodayData() {
 
     // 合并所有行（处理 rows 格式不一致问题）
     const allRows = [];
+    let seq = 1;
     for (const [, item] of todayEntries) {
       // rows 可能是 [] 或 {rows: []}，统一处理
       const rowsRaw = item.rows || [];
       const rowsArr = Array.isArray(rowsRaw) ? rowsRaw : (rowsRaw.rows || []);
       for (const r of rowsArr) {
         allRows.push([
-          r.date || '', r.tracking || '', r.sku || '', r.qty || '',
-          r.startTime || '', r.endTime || '', r.spent || '',
-          r.result || '', r.j || '', r.k || '', r.coworker || ''
+          seq++,                    // A: 序号
+          r.tracking || '',         // B: 退货物流单号
+          r.sku || '',              // C: 实收SKU
+          r.qty || '',              // D: 实收数量
+          r.date || '',             // E: 拆检日期
+          r.startTime || '',        // F: 拆检开始时间
+          r.endTime || '',          // G: 拆检结束时间
+          r.spent || '',            // H: 拆检工时
+          r.result || '',           // I: 拆检结果
+          r.j || '',                // J: 包装辅料消耗SKU
+          r.k || ''                 // K: 入库配件拆检SKU
         ]);
       }
     }
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet([
-      ['拆检日期','快递单号','SKU','数量','开始时间','结束时间','工时','拆检结果','配件','提取物','拆检员'],
+      ['序号','退货物流单号','实收SKU','实收数量','拆检日期','拆检开始时间','拆检结束时间','拆检工时','拆检结果','包装辅料消耗SKU','入库配件拆检SKU'],
       ...allRows
     ]);
     ws['!cols'] = [
