@@ -202,6 +202,18 @@
       box-shadow: 0 6px 20px rgba(59,130,246,0.5);
     }
 
+    .export-date-input {
+      border: 2px solid #93c5fd;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-family: inherit;
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      color: #1e3a8a;
+      cursor: pointer;
+    }
+    .export-date-input:focus { outline: 2px solid #3b82f6; }
+
     .submit-row button:disabled { opacity: 0.6; cursor: not-allowed; }
 
     /* ── 区段标签行 ── */
@@ -526,7 +538,8 @@
 
 <!-- 提交按钮行 -->
 <div class="submit-row">
-  <button id="downloadBtn">📥 下载今日数据</button>
+  <input type="date" id="exportDateInput" class="export-date-input">
+  <button id="downloadBtn">📥 下载数据</button>
   <button id="submitBtn">📤 提交数据</button>
 </div>
 
@@ -1082,47 +1095,44 @@ document.getElementById('submitBtn').addEventListener('click', submitData);
 // ═══════════════════════════════════════════════════════════════
 // 📥 下载今日数据（Excel，北京时间过滤）
 // ═══════════════════════════════════════════════════════════════
-async function downloadTodayData() {
+async function downloadData() {
   const btn = document.getElementById('downloadBtn');
   btn.disabled = true;
   btn.textContent = '⏳ 加载中…';
 
   try {
-    // 今天北京日期
-    const todayBJ = new Date().toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' });
-    const parts = todayBJ.match(/\d+/g);
-    const todayStr = `${parts[0]}-${String(parts[1]).padStart(2,'0')}-${String(parts[2]).padStart(2,'0')}`;
+    // 取日期选择器的值，默认昨天
+    const dateInput = document.getElementById('exportDateInput');
+    const selectedDate = dateInput.value || getYesterdayStr();
 
     const res = await fetch(FIREBASE_URL + 'submissions.json');
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const raw = await res.text();
-    console.log('[下载] Firebase raw:', raw.substring(0, 800));
     let allData;
     try { allData = JSON.parse(raw); } catch(e) { throw new Error('JSON解析失败: ' + raw.substring(0,100)); }
-    console.log('[下载] parsed:', allData);
     if (!allData || typeof allData !== 'object') return;
 
-    // 过滤今日（submitTime 存的是 UTC ISO，转北京时间后比对）
-    const todayEntries = Object.entries(allData)
+    // 过滤指定日期（submitTime 存的是 UTC ISO，转北京时间后比对）
+    const targetEntries = Object.entries(allData)
       .filter(([, item]) => {
         if (!item || !item.submitTime) return false;
         const bj = new Date(item.submitTime)
           .toLocaleDateString('zh-CN', { timeZone: 'Asia/Shanghai' });
         const p = bj.match(/\d+/g);
-        return `${p[0]}-${String(p[1]).padStart(2,'0')}-${String(p[2]).padStart(2,'0')}` === todayStr;
+        return `${p[0]}-${String(p[1]).padStart(2,'0')}-${String(p[2]).padStart(2,'0')}` === selectedDate;
       })
       .sort((a, b) => (a[1]._submittedAt || 0) - (b[1]._submittedAt || 0));
 
-    if (todayEntries.length === 0) {
+    if (targetEntries.length === 0) {
       const existingDates = [...new Set(Object.values(allData).map(i => i.submitTime?.substring(0,10)).filter(Boolean))].join(', ');
-      alert(`今日（${todayStr}）暂无提交\n已有日期：${existingDates}`);
+      alert(`（${selectedDate}）暂无提交\n已有日期：${existingDates}`);
       return;
     }
 
     // 合并所有行（处理 rows 格式不一致问题）
     const allRows = [];
     let seq = 1;
-    for (const [, item] of todayEntries) {
+    for (const [, item] of targetEntries) {
       // rows 可能是 [] 或 {rows: []}，统一处理
       const rowsRaw = item.rows || [];
       const rowsArr = Array.isArray(rowsRaw) ? rowsRaw : (rowsRaw.rows || []);
@@ -1164,21 +1174,29 @@ async function downloadTodayData() {
       {wch:10},{wch:10},{wch:8},{wch:12},
       {wch:22},{wch:22},{wch:12},{wch:10}
     ];
-    XLSX.utils.book_append_sheet(wb, ws, todayStr);
-    XLSX.writeFile(wb, `拆检记录_${todayStr}.xlsx`);
+    XLSX.utils.book_append_sheet(wb, ws, selectedDate);
+    XLSX.writeFile(wb, `拆检记录_${selectedDate}.xlsx`);
     alert(`✅ 导出 ${allRows.length} 条记录`);
   } catch (e) {
     alert('下载失败：' + e.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = '📥 下载今日数据';
+    btn.textContent = '📥 下载数据';
   }
 }
 
-document.getElementById('downloadBtn').addEventListener('click', downloadTodayData);
+function getYesterdayStr() {
+  const now = new Date();
+  const bjStr = new Date(now.getTime() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+  const [y, m, d] = bjStr.split('-');
+  return `${y}-${m}-${d}`;
+}
+
+document.getElementById('downloadBtn').addEventListener('click', downloadData);
 
 window.addEventListener('load', () => {
   document.getElementById('dateInput').value = nyDateStr();
+  document.getElementById('exportDateInput').value = getYesterdayStr();
   build();
   startQR();
   setTimeout(() => document.getElementById('coworkerInput').focus(), 120);
