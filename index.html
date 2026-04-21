@@ -1012,7 +1012,6 @@ document.getElementById('submitBtn').addEventListener('click', submitData);
 // 📥 下载今日数据（Excel，北京时间过滤）
 // ═══════════════════════════════════════════════════════════════
 async function downloadTodayData() {
-  alert('函数被调用了，URL: ' + FIREBASE_URL + 'submissions.json');
   const btn = document.getElementById('downloadBtn');
   btn.disabled = true;
   btn.textContent = '⏳ 加载中…';
@@ -1049,10 +1048,13 @@ async function downloadTodayData() {
       return;
     }
 
-    // 合并所有行
+    // 合并所有行（处理 rows 格式不一致问题）
     const allRows = [];
     for (const [, item] of todayEntries) {
-      for (const r of (item.rows || [])) {
+      // rows 可能是 [] 或 {rows: []}，统一处理
+      const rowsRaw = item.rows || [];
+      const rowsArr = Array.isArray(rowsRaw) ? rowsRaw : (rowsRaw.rows || []);
+      for (const r of rowsArr) {
         allRows.push([
           r.date || '', r.tracking || '', r.sku || '', r.qty || '',
           r.startTime || '', r.endTime || '', r.spent || '',
