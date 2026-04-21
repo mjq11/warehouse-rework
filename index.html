@@ -876,7 +876,7 @@ document.getElementById('addRowBtn').addEventListener('click', addRow);
 // 提交功能配置
 // ═══════════════════════════════════════════════════════════════
 // 【重要】请将下面的 URL 替换为你部署的 Google Apps Script Web 应用 URL
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbybigULEW1MHlqCxdOdU2FLSYEyMRJgz0duD3ipsg/dev';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxYvZAb-nqRWrzPuAGWybC1yDMQZaF0qf4JdrfzY093etwhWUJax2H3EVykjT1cqg/exec';
 
 // ═══════════════════════════════════════════════════════════════
 // 提交功能
@@ -944,7 +944,7 @@ async function submitData() {
     const response = await fetch(GOOGLE_SCRIPT_URL, {
       method: 'POST',
       body: JSON.stringify(data),
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+      headers: { 'Content-Type': 'application/json' }
     });
     
     const result = await response.json();
