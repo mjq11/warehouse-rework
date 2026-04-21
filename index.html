@@ -680,6 +680,63 @@ function startQR() {
   _qrInterval = setInterval(renderQR, 60000);
 }
 
+// ── 自动保存（防止刷新数据丢失） ──
+const SAVE_KEY = 'wr_draft_v1';
+const SAVE_COLS = ['tracking','sku','qty','startTime','endTime','accessory','extracted','status'];
+
+function saveDraft() {
+  const data = rows.map(rd => {
+    const obj = { id: rd.id };
+    for (const col of SAVE_COLS) obj[col] = rd[col] || '';
+    return obj;
+  });
+  localStorage.setItem(SAVE_KEY, JSON.stringify({ rows: data, ts: Date.now() }));
+}
+
+function loadDraft() {
+  const raw = localStorage.getItem(SAVE_KEY);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+function clearDraft() { localStorage.removeItem(SAVE_KEY); }
+
+// 每行输入/修改时自动保存（延迟防抖）
+let _saveTimer;
+function scheduleSave() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(saveDraft, 800);
+}
+
+// 页面加载时检测草稿
+function checkDraftOnLoad() {
+  const draft = loadDraft();
+  if (!draft || !draft.rows || draft.rows.length === 0) return;
+  const ageMin = Math.round((Date.now() - draft.ts) / 60000);
+  const msg = `发现 ${draft.rows.length} 行未提交的草稿（${ageMin}分钟前保存）\n\n点击"恢复草稿"继续编辑，或"清空"从头开始。`;
+  if (!confirm(msg)) { clearDraft(); return; }
+  // 重建对应行数
+  while (rows.length < draft.rows.length) addRow(false);
+  // 填入数据
+  draft.rows.forEach((saved, i) => {
+    const rd = rows[i];
+    if (!rd) return;
+    for (const col of SAVE_COLS) {
+      rd[col] = saved[col] || '';
+      const el = rd._el?.querySelector(`[data-col="${col}"]`);
+      if (el) {
+        if (el.tagName === 'SELECT') el.value = saved[col] || '';
+        else el.value = saved[col] || '';
+      }
+    }
+  });
+  updateCountInfo();
+}
+
+// 提交成功后清除草稿
+const _origSubmit = submitData;
+// 拦截 submitData，在成功后清除草稿（详见 submitData 末尾）
+
 // ── 表格构建 ──
 // 扫码流转：tracking → sku → 跳到 startTime（跳过 C/D/E）
 const SCAN_COLS   = ['tracking','sku'];
@@ -750,6 +807,7 @@ function makeRow(isPre) {
       if (inp.dataset.col === 'startTime' || inp.dataset.col === 'endTime') {
         refreshCalc(rd);
       }
+      scheduleSave();
     });
   });
 
@@ -757,6 +815,7 @@ function makeRow(isPre) {
   tr.querySelectorAll('select[data-col]').forEach(sel => {
     sel.addEventListener('change', () => {
       rd[sel.dataset.col] = sel.value;
+      scheduleSave();
     });
   });
 
@@ -816,6 +875,7 @@ rows.forEach(rd => {
   qtyInp.addEventListener('input', () => {
     rd.qty = qtyInp.value.trim();
     if (JUMP_AFTER_QTY) setTimeout(() => jumpTo(rd.id, JUMP_AFTER_QTY), 40);
+    scheduleSave();
   });
   qtyInp.addEventListener('keydown', e => {
     if (e.key === 'Enter') {
@@ -853,6 +913,7 @@ rows.forEach(rd => {
       // 记录数据
       inp.addEventListener('input', () => {
         rd[col] = inp.value;
+        scheduleSave();
       });
     });
   });
@@ -981,6 +1042,7 @@ async function submitData() {
     const result = await response.json();
     if (result.name) {
       alert('✅ 提交成功！数据已保存');
+      clearDraft();
       // 清空已提交的数据
       rows.forEach(rd => {
         rd.tracking = rd.sku = rd.qty = rd.startTime = rd.endTime =
@@ -1111,6 +1173,7 @@ window.addEventListener('load', () => {
   build();
   startQR();
   setTimeout(() => document.getElementById('coworkerInput').focus(), 120);
+  checkDraftOnLoad();
 });
 </script>
 </body>
