@@ -929,7 +929,7 @@ function collectData() {
     date: rd.date || '',
     startTime: rd.startTime || '',
     endTime: rd.endTime || '',
-    spent: rd.spent || '',
+    spent: calcSpent(rd) || rd.spent || '',  // 动态计算工时
     result: rd.status || '',     // 拆检结果
     j: rd.accessory || '',       // 包装辅料消耗SKU
     k: rd.extracted || '',       // 入库配件拆检SKU
@@ -1056,6 +1056,16 @@ async function downloadTodayData() {
       const rowsRaw = item.rows || [];
       const rowsArr = Array.isArray(rowsRaw) ? rowsRaw : (rowsRaw.rows || []);
       for (const r of rowsArr) {
+        // 工时：优先用已有值，否则动态计算
+        let spentVal = r.spent || '';
+        if (!spentVal && r.startTime && r.endTime) {
+          const toMin = t => { const p = t.split(':').map(Number); return p[0]*60 + p[1]; };
+          const diff = toMin(r.endTime) - toMin(r.startTime);
+          if (diff > 0) {
+            const h = Math.floor(diff / 60), m = diff % 60;
+            spentVal = h > 0 ? `${h}h${m}m` : `${m}m`;
+          }
+        }
         allRows.push([
           seq++,                    // A: 序号
           r.tracking || '',         // B: 退货物流单号
@@ -1064,7 +1074,7 @@ async function downloadTodayData() {
           r.date || '',             // E: 拆检日期
           r.startTime || '',        // F: 拆检开始时间
           r.endTime || '',          // G: 拆检结束时间
-          r.spent || '',            // H: 拆检工时
+          spentVal,                 // H: 拆检工时
           r.result || '',           // I: 拆检结果
           r.j || '',                // J: 包装辅料消耗SKU
           r.k || ''                 // K: 入库配件拆检SKU
