@@ -751,9 +751,8 @@ const _origSubmit = submitData;
 // 拦截 submitData，在成功后清除草稿（详见 submitData 末尾）
 
 // ── 表格构建 ──
-// 扫码流转：tracking → sku → 跳到 startTime（跳过 C/D/E）
-const SCAN_COLS   = ['tracking','sku'];
-const JUMP_AFTER_QTY = 'startTime';  // qty 输入后跳到此列
+// 扫码流转：tracking → sku → qty → startTime → endTime
+const SCAN_COLS   = ['tracking','sku','qty','startTime','endTime'];
 const ROW_INIT    = 50;
 let rowCount = 0;
 let rows     = [];
@@ -861,6 +860,7 @@ SCAN_COLS.forEach(col => {
     if (!inp) return;
     inp.addEventListener('input', () => {
       rd[col] = inp.value.trim();
+      scheduleSave();
       const i = SCAN_COLS.indexOf(col);
       if (i < SCAN_COLS.length - 1) {
         const next = SCAN_COLS[i + 1];
@@ -878,23 +878,6 @@ SCAN_COLS.forEach(col => {
         }
       }
     });
-  });
-});
-
-// qty 输入完成后跳到 startTime
-rows.forEach(rd => {
-  const qtyInp = rd._el.querySelector('input[data-col="qty"]');
-  if (!qtyInp) return;
-  qtyInp.addEventListener('input', () => {
-    rd.qty = qtyInp.value.trim();
-    if (JUMP_AFTER_QTY) setTimeout(() => jumpTo(rd.id, JUMP_AFTER_QTY), 40);
-    scheduleSave();
-  });
-  qtyInp.addEventListener('keydown', e => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (JUMP_AFTER_QTY) jumpTo(rd.id, JUMP_AFTER_QTY);
-    }
   });
 });
 
