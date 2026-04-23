@@ -17,6 +17,82 @@
       padding: 32px 20px 60px;
     }
 
+    /* ── 登录遮罩 ── */
+    #loginOverlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    }
+    #loginOverlay.hidden { display: none; }
+
+    .login-box {
+      background: #fff;
+      border-radius: 16px;
+      padding: 40px 48px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      max-width: 400px;
+      width: 90%;
+    }
+    .login-box h2 {
+      text-align: center;
+      color: #1e3a5f;
+      margin-bottom: 8px;
+      font-size: 24px;
+      letter-spacing: 2px;
+    }
+    .login-box .login-sub {
+      text-align: center;
+      color: #888;
+      font-size: 13px;
+      margin-bottom: 28px;
+    }
+    .login-box input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e6ef;
+      border-radius: 10px;
+      font-size: 15px;
+      margin-bottom: 16px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .login-box input:focus {
+      border-color: #3b82f6;
+    }
+    .login-box .login-btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 2px;
+      transition: all 0.2s;
+    }
+    .login-box .login-btn:hover {
+      background: linear-gradient(135deg, #1e40af, #2563eb);
+      transform: translateY(-2px);
+    }
+    .login-box .login-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .login-error {
+      color: #dc2626;
+      font-size: 13px;
+      text-align: center;
+      margin-bottom: 16px;
+      min-height: 20px;
+    }
+
     /* ── 页面标题 ── */
     .page-header {
       width: 100%;
@@ -97,6 +173,23 @@
     .header-field input[readonly] {
       opacity: 0.7;
       cursor: default;
+    }
+
+    /* 登出按钮 */
+    .logout-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 8px;
+      color: #fff;
+      padding: 8px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+      letter-spacing: 1px;
+    }
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.25);
     }
 
     /* ── QR 区域 ── */
@@ -221,7 +314,7 @@
       width: 100%;
       max-width: 1100px;
       display: grid;
-      grid-template-columns: 4fr 5fr 2fr; /* A-D:4格 E-I:5格 J-K:2格 */
+      grid-template-columns: 4fr 5fr 2fr;
       margin-bottom: 2px;
       gap: 3px;
     }
@@ -364,7 +457,6 @@
       padding: 5px 6px;
     }
 
-    /* 累加扫码格：包装辅料 / 入库配件 */
     tbody input.accum-input {
       background: #fffbf0;
     }
@@ -375,7 +467,6 @@
       padding: 5px 6px;
     }
 
-    /* 拆检工时自动计算格 */
     tbody td[data-col="spent"] {
       text-align: center;
       font-weight: 600;
@@ -387,7 +478,6 @@
       padding: 6px 4px;
     }
 
-    /* 拆检结果下拉格 */
     tbody td.status-cell {
       padding: 0;
       background: #eff6ff;
@@ -409,12 +499,10 @@
       background: #dbeafe;
     }
 
-    tbody input[readonly] {
     .col-b { border-left: 2px solid #ccd5e0 !important; }
     .col-e { border-left: 2px solid #a0b4c8 !important; }
     .col-j { border-left: 2px solid #ccd5e0 !important; }
 
-    /* 行底色 */
     .predefined-row .row-num { background: #f1f5f9; }
     .extra-row .row-num { background: #fef3c7; }
 
@@ -470,10 +558,7 @@
 
     .add-btn:active { transform: translateY(0); }
 
-    .submit-btn {
-      display: none;
-    }
-
+    .submit-btn { display: none; }
     .submit-btn-fixed, .submit-btn { display: none; }
 
     .submit-toast {
@@ -508,6 +593,18 @@
 </head>
 <body>
 
+<!-- 登录遮罩 -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <h2>🔐 系统登录</h2>
+    <div class="login-sub">仓库拆检登记系统</div>
+    <div class="login-error" id="loginError"></div>
+    <input type="email" id="loginEmail" placeholder="邮箱地址" autocomplete="email">
+    <input type="password" id="loginPassword" placeholder="密码" autocomplete="current-password">
+    <button class="login-btn" id="loginBtn">登 录</button>
+  </div>
+</div>
+
 <!-- 页面标题区 -->
 <div class="page-header">
   <div>
@@ -523,6 +620,7 @@
       <span class="lbl">DATE (PT)</span>
       <input type="text" id="dateInput" readonly tabindex="-1">
     </div>
+    <button class="logout-btn" id="logoutBtn">退出登录</button>
   </div>
 </div>
 
@@ -614,10 +712,107 @@
   <button class="add-btn" id="addRowBtn">+ 添加行</button>
 </div>
 
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
 <!-- SheetJS for Excel export -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <script>
+// ═══════════════════════════════════════════════════════════════
+// Firebase 配置
+// ═══════════════════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyAwoWtCe1MorDk2kW0YQc1SHipjmySyP0o",
+  authDomain: "maidesite.firebaseapp.com",
+  databaseURL: "https://maidesite-default-rtdb.firebaseio.com",
+  projectId: "maidesite",
+  storageBucket: "maidesite.firebasestorage.app",
+  messagingSenderId: "12653137640",
+  appId: "1:12653137640:web:cf92adf87a28df7740c35d"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+// ═══════════════════════════════════════════════════════════════
+// 登录状态管理
+// ═══════════════════════════════════════════════════════════════
+let currentUser = null;
+
+function showLogin() {
+  document.getElementById('loginOverlay').classList.remove('hidden');
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').textContent = '';
+  setTimeout(() => document.getElementById('loginEmail').focus(), 100);
+}
+
+function hideLogin() {
+  document.getElementById('loginOverlay').classList.add('hidden');
+}
+
+async function handleLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errorEl = document.getElementById('loginError');
+  const btn = document.getElementById('loginBtn');
+
+  if (!email || !password) {
+    errorEl.textContent = '请输入邮箱和密码';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '登录中...';
+  errorEl.textContent = '';
+
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    // 登录成功后 onAuthStateChanged 会自动处理
+  } catch (e) {
+    let msg = e.message;
+    if (e.code === 'auth/user-not-found') msg = '用户不存在';
+    else if (e.code === 'auth/wrong-password') msg = '密码错误';
+    else if (e.code === 'auth/invalid-email') msg = '邮箱格式不正确';
+    else if (e.code === 'auth/too-many-requests') msg = '登录尝试过多，请稍后再试';
+    errorEl.textContent = msg;
+    btn.disabled = false;
+    btn.textContent = '登 录';
+  }
+}
+
+function handleLogout() {
+  if (confirm('确定要退出登录吗？')) {
+    auth.signOut();
+  }
+}
+
+// 登录按钮事件
+document.getElementById('loginBtn').addEventListener('click', handleLogin);
+
+// 回车登录
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleLogin();
+});
+document.getElementById('loginEmail').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('loginPassword').focus();
+});
+
+// 登出按钮
+document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+
+// 认证状态监听
+auth.onAuthStateChanged(user => {
+  if (user) {
+    currentUser = user;
+    hideLogin();
+  } else {
+    currentUser = null;
+    showLogin();
+  }
+});
+
 // ── 时区工具 ──
 function getNY() {
   const now = new Date();
@@ -726,7 +921,7 @@ function checkDraftOnLoad() {
   const draft = loadDraft();
   if (!draft || !draft.rows || draft.rows.length === 0) return;
   const ageMin = Math.round((Date.now() - draft.ts) / 60000);
-  const msg = `发现 ${draft.rows.length} 行未提交的草稿（${ageMin}分钟前保存）\n\n点击"恢复草稿"继续编辑，或"清空"从头开始。`;
+  const msg = `发现 ${draft.rows.length} 行未提交的草稿（${ageMin}分钟前保存）\n\n点击"确定"恢复草稿，或"取消"从头开始。`;
   if (!confirm(msg)) { clearDraft(); return; }
   // 重建对应行数
   while (rows.length < draft.rows.length) addRow(false);
@@ -745,10 +940,6 @@ function checkDraftOnLoad() {
   });
   updateCountInfo();
 }
-
-// 提交成功后清除草稿
-const _origSubmit = submitData;
-// 拦截 submitData，在成功后清除草稿（详见 submitData 末尾）
 
 // ── 表格构建 ──
 // 扫码流转：tracking → sku → qty → startTime → endTime
@@ -795,22 +986,6 @@ function makeRow(isPre) {
   tr.querySelector('[data-col="date"]').value = rd.date;
   tr.querySelector('[data-col="qty"]').value   = rd.qty;
 
-  // focus 事件：扫码枪录入时间，不再自动取值
-  // tr.querySelectorAll('input').forEach(inp => {
-  //   inp.addEventListener('focus', () => {
-  //     const col = inp.dataset.col;
-  //     if (col === 'startTime' && !rd.startTime) {
-  //       rd.startTime = nyTimeHM();
-  //       rd.endTime = '';
-  //       refreshCalc(rd);
-  //     }
-  //     if (col === 'endTime') {
-  //       rd.endTime = nyTimeHM();
-  //       refreshCalc(rd);
-  //     }
-  //   });
-  // });
-
   // input 事件：记录数据 & 实时计算工时
   tr.querySelectorAll('input[data-col]').forEach(inp => {
     inp.addEventListener('input', () => {
@@ -852,34 +1027,33 @@ function jumpTo(rowId, col) {
 }
 
 function bindFlow() {
-  // 扫码流转：tracking → sku → startTime（跳过 C/D/E 列）
-// 实收数量(qty)输入完成后也跳到 startTime
-SCAN_COLS.forEach(col => {
-  rows.forEach(rd => {
-    const inp = rd._el.querySelector(`input[data-col="${col}"]`);
-    if (!inp) return;
-    inp.addEventListener('input', () => {
-      rd[col] = inp.value.trim();
-      scheduleSave();
-      const i = SCAN_COLS.indexOf(col);
-      if (i < SCAN_COLS.length - 1) {
-        const next = SCAN_COLS[i + 1];
-        if (next) setTimeout(() => jumpTo(rd.id, next), 40);
-      }
-    });
-    inp.addEventListener('keydown', e => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
+  // 扫码流转：tracking → sku → qty → startTime → endTime
+  SCAN_COLS.forEach(col => {
+    rows.forEach(rd => {
+      const inp = rd._el.querySelector(`input[data-col="${col}"]`);
+      if (!inp) return;
+      inp.addEventListener('input', () => {
+        rd[col] = inp.value.trim();
+        scheduleSave();
         const i = SCAN_COLS.indexOf(col);
         if (i < SCAN_COLS.length - 1) {
-          jumpTo(rd.id, SCAN_COLS[i + 1]);
-        } else {
-          inp.blur();
+          const next = SCAN_COLS[i + 1];
+          if (next) setTimeout(() => jumpTo(rd.id, next), 40);
         }
-      }
+      });
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const i = SCAN_COLS.indexOf(col);
+          if (i < SCAN_COLS.length - 1) {
+            jumpTo(rd.id, SCAN_COLS[i + 1]);
+          } else {
+            inp.blur();
+          }
+        }
+      });
     });
   });
-});
 
   // 累加扫码：包装辅料 / 入库配件（扫码累加，不跳下一行）
   const ACCUM_COLS = ['accessory', 'extracted'];
@@ -977,7 +1151,7 @@ function collectData() {
     return null; // 没有有效数据
   }
   
-  // 按 Google Script 格式：每行包含 coworker 和 submitTime
+  // 按格式：每行包含 coworker 和 submitTime
   const rowDataList = filledRows.map((rd, idx) => ({
     index: idx + 1,
     tracking: rd.tracking || '',
@@ -986,10 +1160,10 @@ function collectData() {
     date: rd.date || '',
     startTime: rd.startTime || '',
     endTime: rd.endTime || '',
-    spent: calcSpent(rd) || rd.spent || '',  // 动态计算工时
-    result: rd.status || '',     // 拆检结果
-    j: rd.accessory || '',       // 包装辅料消耗SKU
-    k: rd.extracted || '',       // 入库配件拆检SKU
+    spent: calcSpent(rd) || rd.spent || '',
+    result: rd.status || '',
+    j: rd.accessory || '',
+    k: rd.extracted || '',
     coworker: coworker,
     submitTime: submitTime
   }));
@@ -998,6 +1172,13 @@ function collectData() {
 }
 
 async function submitData() {
+  // 检查登录状态
+  if (!currentUser) {
+    alert('⚠️ 请先登录！');
+    showLogin();
+    return;
+  }
+
   const btn = document.getElementById('submitBtn');
 
   // 员工姓名必填校验
@@ -1029,7 +1210,11 @@ async function submitData() {
     const payload = {
       rows: data,
       submitTime: submitTime,
-      _submittedAt: Date.now()
+      _submittedAt: Date.now(),
+      submittedBy: {
+        uid: currentUser.uid,
+        email: currentUser.email
+      }
     };
 
     const response = await fetch(FIREBASE_URL + 'submissions.json', {
@@ -1120,13 +1305,10 @@ async function downloadData() {
     const allRows = [];
     let seq = 1;
     for (const [, item] of targetEntries) {
-      // rows 可能是 [] 或 {rows: []}，统一处理
       const rowsRaw = item.rows || [];
       const rowsArr = Array.isArray(rowsRaw) ? rowsRaw : (rowsRaw.rows || []);
       for (const r of rowsArr) {
-        // 只导出拆检日期匹配 selectedDate 的行
         if (r.date !== selectedDate) continue;
-        // 工时：优先用已有值，否则动态计算
         let spentVal = r.spent || '';
         if (!spentVal && r.startTime && r.endTime) {
           const toMin = t => { const p = t.split(':').map(Number); return p[0]*60 + p[1]; };
@@ -1137,18 +1319,18 @@ async function downloadData() {
           }
         }
         allRows.push([
-          seq++,                    // A: 序号
-          r.tracking || '',         // B: 退货物流单号
-          r.sku || '',              // C: 实收SKU
-          r.qty || '',              // D: 实收数量
-          r.date || '',             // E: 拆检日期
-          r.startTime || '',        // F: 拆检开始时间
-          r.endTime || '',          // G: 拆检结束时间
-          spentVal,                 // H: 拆检工时
-          r.result || '',           // I: 拆检结果
-          r.j || '',                // J: 包装辅料消耗SKU
-          r.k || '',                // K: 入库配件拆检SKU
-          r.coworker || ''          // L: 员工姓名
+          seq++,
+          r.tracking || '',
+          r.sku || '',
+          r.qty || '',
+          r.date || '',
+          r.startTime || '',
+          r.endTime || '',
+          spentVal,
+          r.result || '',
+          r.j || '',
+          r.k || '',
+          r.coworker || ''
         ]);
       }
     }
@@ -1187,8 +1369,7 @@ window.addEventListener('load', () => {
   document.getElementById('exportDateInput').value = getYesterdayStr();
   build();
   startQR();
-  setTimeout(() => document.getElementById('coworkerInput').focus(), 120);
-  checkDraftOnLoad();
+  // 不再自动聚焦 coworkerInput，等登录后再处理
 });
 </script>
 </body>
