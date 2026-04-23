@@ -782,9 +782,14 @@ async function handleLogin() {
   }
 }
 
-function handleLogout() {
+async function handleLogout() {
   if (confirm('确定要退出登录吗？')) {
-    auth.signOut();
+    try {
+      await auth.signOut();
+      // onAuthStateChanged 会自动处理 UI 更新
+    } catch (e) {
+      alert('退出失败：' + e.message);
+    }
   }
 }
 
