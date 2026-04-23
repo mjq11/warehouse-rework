@@ -825,6 +825,8 @@ auth.onAuthStateChanged(user => {
     coworkerInput.readOnly = true;
     coworkerInput.style.opacity = '0.7';
     coworkerInput.style.cursor = 'default';
+    // 登录成功后检测草稿
+    checkDraftOnLoad();
   } else {
     currentUser = null;
     showLogin();
@@ -1393,6 +1395,7 @@ window.addEventListener('load', () => {
   build();
   startQR();
   // 不再自动聚焦 coworkerInput，等登录后再处理
+  // 草稿恢复提示（登录前不检测草稿，登录成功后再检测）
 });
 </script>
 </body>
