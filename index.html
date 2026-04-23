@@ -783,13 +783,20 @@ async function handleLogin() {
 }
 
 async function handleLogout() {
+  console.log('handleLogout called');
   if (confirm('确定要退出登录吗？')) {
+    console.log('confirm returned true');
     try {
       await auth.signOut();
-      // onAuthStateChanged 会自动处理 UI 更新
+      console.log('signOut success');
+      // 强制刷新页面状态
+      location.reload();
     } catch (e) {
+      console.log('signOut error:', e);
       alert('退出失败：' + e.message);
     }
+  } else {
+    console.log('confirm returned false or blocked');
   }
 }
 
