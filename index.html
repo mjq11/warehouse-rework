@@ -804,12 +804,23 @@ document.getElementById('logoutBtn').addEventListener('click', handleLogout);
 
 // 认证状态监听
 auth.onAuthStateChanged(user => {
+  const coworkerInput = document.getElementById('coworkerInput');
   if (user) {
     currentUser = user;
     hideLogin();
+    // 自动填充登录用户的邮箱作为 coworker
+    coworkerInput.value = user.email;
+    coworkerInput.readOnly = true;
+    coworkerInput.style.opacity = '0.7';
+    coworkerInput.style.cursor = 'default';
   } else {
     currentUser = null;
     showLogin();
+    // 登出时清空并恢复可编辑
+    coworkerInput.value = '';
+    coworkerInput.readOnly = false;
+    coworkerInput.style.opacity = '1';
+    coworkerInput.style.cursor = 'text';
   }
 });
 
