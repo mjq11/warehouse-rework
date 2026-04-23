@@ -620,7 +620,7 @@
       <span class="lbl">DATE (PT)</span>
       <input type="text" id="dateInput" readonly tabindex="-1">
     </div>
-    <button class="logout-btn" id="logoutBtn">退出登录</button>
+    <button class="logout-btn" id="logoutBtn" onclick="handleLogout()">退出登录</button>
   </div>
 </div>
 
@@ -804,8 +804,7 @@ document.getElementById('loginEmail').addEventListener('keydown', e => {
   if (e.key === 'Enter') document.getElementById('loginPassword').focus();
 });
 
-// 登出按钮
-document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+// 登出按钮事件已通过 onclick 属性绑定
 
 // 认证状态监听
 auth.onAuthStateChanged(user => {
