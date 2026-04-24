@@ -1240,10 +1240,14 @@ async function submitData() {
       }
     };
 
+    const idToken = currentUser ? await auth.currentUser.getIdToken() : null;
+    const headers = { 'Content-Type': 'application/json' };
+    if (idToken) headers['Authorization'] = 'Bearer ' + idToken;
+
     const response = await fetch(FIREBASE_URL + 'submissions.json', {
       method: 'POST',
       body: JSON.stringify(payload),
-      headers: { 'Content-Type': 'application/json' }
+      headers: headers
     });
 
     if (!response.ok) {
