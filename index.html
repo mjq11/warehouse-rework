@@ -14,7 +14,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 32px 20px 60px;
+      padding: 16px 16px 40px;
     }
 
     /* ── 登录遮罩 ── */
@@ -100,8 +100,8 @@
       background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
       color: #fff;
       border-radius: 12px;
-      padding: 20px 28px 18px;
-      margin-bottom: 16px;
+      padding: 14px 24px 12px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -193,87 +193,88 @@
       background: rgba(255,255,255,0.25);
     }
 
-    /* ── QR 区域 ── */
-    .qr-block {
+    /* ── 工具栏（QR + 操作按钮合并） ── */
+    .toolbar {
       width: 100%;
       max-width: 1100px;
       background: #fff;
       border-radius: 10px;
-      padding: 16px 24px;
-      margin-bottom: 14px;
+      padding: 10px 20px;
+      margin-bottom: 8px;
       display: flex;
       align-items: center;
-      justify-content: flex-end;
-      gap: 20px;
+      justify-content: space-between;
+      gap: 12px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.06);
       border: 1px solid #e8ecf0;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
     }
 
     .qr-info-block {
       display: flex;
       flex-direction: column;
-      gap: 4px;
-      text-align: right;
-    }
-
-    .qr-info-block .qr-label {
-      font-size: 12px;
-      color: #999;
-      letter-spacing: 2px;
+      gap: 2px;
     }
 
     .qr-info-block .qr-time {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 700;
       color: #1e3a5f;
       font-variant-numeric: tabular-nums;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
 
     .qr-info-block .qr-note {
       font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .qr-info-block .qr-label {
+      font-size: 10px;
       color: #c0c8d4;
+      letter-spacing: 0.5px;
     }
 
     #qrcode {
-      width: 120px;
-      height: 120px;
-      border-radius: 8px;
-      border: 1px solid #e8ecf0;
+      width: 72px;
+      height: 72px;
+      border-radius: 6px;
       background: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
       flex-shrink: 0;
       overflow: hidden;
     }
 
     #qrcode img { border-radius: 4px; }
 
-    /* ── 提交按钮行 ── */
-    .submit-row {
-      width: 100%;
-      max-width: 1100px;
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 8px 0;
-      margin-bottom: 4px;
-    }
-
-    .submit-row button {
+    .toolbar-right button {
       color: #fff;
       border: 2px solid;
-      border-radius: 10px;
-      font-size: 16px;
+      border-radius: 8px;
+      font-size: 14px;
       font-weight: 700;
       cursor: pointer;
       font-family: inherit;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
       transition: all 0.2s;
-      padding: 10px 24px;
-      letter-spacing: 2px;
+      padding: 8px 16px;
+      letter-spacing: 1px;
+      white-space: nowrap;
     }
 
     #submitBtn {
@@ -298,9 +299,9 @@
 
     .export-date-input {
       border: 2px solid #93c5fd;
-      border-radius: 10px;
-      padding: 10px 16px;
-      font-size: 14px;
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 13px;
       font-family: inherit;
       background: linear-gradient(135deg, #eff6ff, #dbeafe);
       color: #1e3a8a;
@@ -308,7 +309,7 @@
     }
     .export-date-input:focus { outline: 2px solid #3b82f6; }
 
-    .submit-row button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .toolbar-right button:disabled { opacity: 0.6; cursor: not-allowed; }
 
     /* ── 区段标签行 ── */
     .section-labels-row {
@@ -318,6 +319,7 @@
     }
     .section-labels-row table {
       width: 100%;
+      table-layout: fixed;
       border-collapse: collapse;
       border-radius: 10px;
       overflow: hidden;
@@ -460,12 +462,6 @@
       cursor: default;
     }
 
-    tbody input:focus {
-      background: #e8f2ff;
-      border: 1px solid #93c5fd;
-      padding: 5px 6px;
-    }
-
     tbody input.accum-input {
       background: #fffbf0;
     }
@@ -522,7 +518,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-top: 14px;
+      margin-top: 8px;
       gap: 20px;
     }
 
@@ -631,21 +627,21 @@
   </div>
 </div>
 
-<!-- 二维码区（右侧对齐） -->
-<div class="qr-block">
-  <div class="qr-info-block">
-    <span class="qr-label">时间二维码 · Time QR (auto-refresh 60s)</span>
-    <span class="qr-time" id="qrTime">--:--:--</span>
-    <span class="qr-note" id="qrDate">--</span>
+<!-- 工具栏 -->
+<div class="toolbar">
+  <div class="toolbar-left">
+    <div id="qrcode"></div>
+    <div class="qr-info-block">
+      <span class="qr-time" id="qrTime">--:--:--</span>
+      <span class="qr-note" id="qrDate">--</span>
+      <span class="qr-label">QR · 60s</span>
+    </div>
   </div>
-  <div id="qrcode"></div>
-</div>
-
-<!-- 提交按钮行 -->
-<div class="submit-row">
-  <input type="date" id="exportDateInput" class="export-date-input">
-  <button id="downloadBtn">📥 下载数据 · Download</button>
-  <button id="submitBtn">📤 提交数据 · Submit</button>
+  <div class="toolbar-right">
+    <input type="date" id="exportDateInput" class="export-date-input">
+    <button id="downloadBtn">📥 下载 · Download</button>
+    <button id="submitBtn">📤 提交 · Submit</button>
+  </div>
 </div>
 
 <!-- 区段标签（严格对应列分组：A-D / E-I / J-K） -->
@@ -940,8 +936,8 @@ function renderQR() {
   document.getElementById('qrDate').textContent = nyDateStr();
 
   // 用 img 标签，仅替换 src 不刷新页面
-  const url = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(ts)}&t=${Date.now()}`;
-  el.innerHTML = `<img src="${url}" width="120" height="120" alt="time QR" style="border-radius:4px;">`;
+  const url = `https://api.qrserver.com/v1/create-qr-code/?size=72x72&data=${encodeURIComponent(ts)}&t=${Date.now()}`;
+  el.innerHTML = `<img src="${url}" width="72" height="72" alt="time QR" style="border-radius:4px;">`;
 }
 
 function startQR() {
@@ -1327,7 +1323,7 @@ async function submitData() {
     alert('提交失败 · Submit failed: ' + msg);
   } finally {
     btn.disabled = false;
-    btn.textContent = '📤 提交数据 · Submit';
+    btn.textContent = '📤 提交 · Submit';
   }
 }
 
@@ -1427,7 +1423,7 @@ async function downloadData() {
     alert('下载失败 · Download failed: ' + e.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = '📥 下载数据 · Download';
+    btn.textContent = '📥 下载 · Download';
   }
 }
 
