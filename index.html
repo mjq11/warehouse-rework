@@ -966,7 +966,7 @@ function checkDraftOnLoad() {
 
 // ── 表格构建 ──
 // 扫码流转：tracking → sku → qty → startTime → endTime
-const SCAN_COLS   = ['tracking','sku','qty','startTime','endTime'];
+const SCAN_COLS   = ['tracking','sku','startTime','endTime'];
 const ROW_INIT    = 50;
 let rowCount = 0;
 let rows     = [];
@@ -1260,10 +1260,19 @@ async function submitData() {
       alert('✅ 提交成功！数据已保存');
       clearDraft();
       // 清空已提交的数据
+      // 保留拆检日期，只清空其他字段
+      const preservedDate = document.getElementById('dateInput').value;
       rows.forEach(rd => {
         rd.tracking = rd.sku = rd.qty = rd.startTime = rd.endTime =
           rd.status = rd.accessory = rd.extracted = '';
-        rd._el.querySelectorAll('input').forEach(inp => inp.value = '');
+        rd._el.querySelectorAll('input').forEach(inp => {
+          if (inp.dataset.col === 'date') {
+            inp.value = preservedDate; // 保留拆检日期
+            rd.date = preservedDate;
+          } else {
+            inp.value = '';
+          }
+        });
         rd._el.querySelector('[data-col="spent"]').textContent = '';
         rd._el.querySelector('select').value = '';
       });
