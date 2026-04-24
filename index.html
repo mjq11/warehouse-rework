@@ -314,10 +314,17 @@
     .section-labels-row {
       width: 100%;
       max-width: 1100px;
-      display: grid;
-      grid-template-columns: 4fr 5fr 2fr;
-      margin-bottom: 2px;
-      gap: 3px;
+      margin-bottom: 0;
+    }
+    .section-labels-row table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .section-labels-row table td {
+      padding: 0;
+      border: none;
     }
 
     .sec-badge {
@@ -346,6 +353,7 @@
 
     table {
       width: 100%;
+      table-layout: fixed;
       border-collapse: collapse;
       font-size: 12px;
       background: #fff;
@@ -642,14 +650,44 @@
 
 <!-- 区段标签（严格对应列分组：A-D / E-I / J-K） -->
 <div class="section-labels-row">
-  <div class="sec-badge blue">订单基础信息 · Order Info</div>
-  <div class="sec-badge orange">拆检结果及工时 · Rework Details</div>
-  <div class="sec-badge green">产生费用 · Costs</div>
+  <table>
+  <colgroup>
+    <col style="width:38px">
+    <col>
+    <col>
+    <col>
+    <col>
+    <col>
+    <col>
+    <col>
+    <col>
+    <col>
+    <col>
+  </colgroup>
+  <tr>
+    <td class="row-num"></td>
+    <td class="col-b" colspan="3"><div class="sec-badge blue">订单基础信息 · Order Info</div></td>
+    <td class="col-e" colspan="5"><div class="sec-badge orange">拆检结果及工时 · Rework Details</div></td>
+    <td class="col-j" colspan="2"><div class="sec-badge green">产生费用 · Costs</div></td>
+  </tr></table>
 </div>
 
 <!-- 数据表格 -->
 <div class="table-wrap">
   <table id="dataTable">
+  <colgroup>
+    <col style="width:38px">
+    <col>
+    <col>
+    <col>
+    <col>
+    <col>
+    <col>
+    <col>
+    <col>
+    <col>
+    <col>
+  </colgroup>
     <thead>
       <tr>
         <!-- A: 序号 — 订单基础信息 -->
