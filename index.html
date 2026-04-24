@@ -1276,7 +1276,6 @@ async function submitData() {
         rd._el.querySelector('[data-col="spent"]').textContent = '';
         rd._el.querySelector('select').value = '';
       });
-      document.getElementById('coworkerInput').value = '';
       updateCount();
     } else {
       alert('提交失败: ' + JSON.stringify(result));
