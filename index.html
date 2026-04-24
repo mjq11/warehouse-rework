@@ -504,12 +504,6 @@
     .col-e { border-left: 2px solid #a0b4c8 !important; }
     .col-j { border-left: 2px solid #ccd5e0 !important; }
 
-    /* ── 输入校验错误样式 ── */
-    .error-input {
-      border-color: #ef4444 !important;
-      background: #fef2f2 !important;
-    }
-
     .predefined-row .row-num { background: #f1f5f9; }
     .extra-row .row-num { background: #fef3c7; }
 
@@ -594,66 +588,6 @@
       100% { opacity: 1; transform: scale(1); }
     }
     .qr-flash { animation: qrPulse 0.35s ease-in-out; }
-
-    /* ── 历史记录弹窗 ── */
-    .modal-overlay {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.45); z-index: 9000; display: none;
-      align-items: center; justify-content: center;
-    }
-    .modal-overlay.show { display: flex; }
-    .modal-box {
-      background: #fff; border-radius: 14px; width: 90%; max-width: 900px;
-      max-height: 85vh; display: flex; flex-direction: column;
-      box-shadow: 0 24px 80px rgba(0,0,0,0.25);
-    }
-    .modal-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 16px 20px; border-bottom: 1px solid #e5e7eb;
-      font-size: 16px; font-weight: 700; color: #1e3a5f;
-      flex-shrink: 0;
-    }
-    .modal-close {
-      background: none; border: none; font-size: 20px; cursor: pointer;
-      color: #9ca3af; padding: 4px 8px; border-radius: 6px;
-    }
-    .modal-close:hover { background: #f3f4f6; color: #374151; }
-    .modal-toolbar {
-      padding: 12px 20px; border-bottom: 1px solid #e5e7eb;
-      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-    }
-    .modal-toolbar label { font-size: 14px; color: #374151; display: flex; align-items: center; gap: 6px; }
-    .modal-toolbar input[type="date"] { padding: 6px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
-    .modal-toolbar button {
-      padding: 6px 14px; background: #3b82f6; color: #fff;
-      border: none; border-radius: 6px; font-size: 14px; cursor: pointer;
-    }
-    .modal-toolbar button:hover { background: #2563eb; }
-    .hist-list { overflow-y: auto; padding: 12px 20px; flex: 1; }
-    .hist-item {
-      border: 1px solid #e5e7eb; border-radius: 10px; margin-bottom: 10px;
-      cursor: pointer; transition: box-shadow 0.2s;
-    }
-    .hist-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-    .hist-summary {
-      display: flex; align-items: center; gap: 16px; padding: 12px 16px;
-      font-size: 14px; flex-wrap: wrap;
-    }
-    .hist-time { font-weight: 600; color: #1f2937; }
-    .hist-rows { color: #6b7280; }
-    .hist-email { color: #9ca3af; font-size: 13px; margin-left: auto; }
-    .hist-warn { color: #d97706; font-size: 13px; }
-    .hist-detail { padding: 0 16px 16px; }
-    .hist-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
-    .hist-table th { background: #f9fafb; padding: 8px 10px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap; }
-    .hist-table td { padding: 7px 10px; border-bottom: 1px solid #f3f4f6; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .hist-table tr:last-child td { border-bottom: none; }
-    .hist-actions { margin-top: 10px; text-align: right; }
-    .hist-del-btn {
-      background: #fee2e2; color: #dc2626; border: 1px solid #fca5a5;
-      border-radius: 6px; padding: 6px 14px; font-size: 13px; cursor: pointer;
-    }
-    .hist-del-btn:hover { background: #fecaca; }
   </style>
 </head>
 <body>
@@ -703,7 +637,6 @@
 <div class="submit-row">
   <input type="date" id="exportDateInput" class="export-date-input">
   <button id="downloadBtn">📥 下载数据</button>
-  <button id="historyBtn">📋 历史记录</button>
   <button id="submitBtn">📤 提交数据</button>
 </div>
 
@@ -799,15 +732,7 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
-const db   = firebase.database();
 const auth = firebase.auth();
-
-// ── 离线持久化 ──
-db.goOffline(); // 先暂停，等待登录后再连（避免未登录时写入本地缓存）
-auth.onAuthStateChanged(user => {
-  if (user) db.goOnline();
-  else       db.goOffline();
-});
 
 // ═══════════════════════════════════════════════════════════════
 // 登录状态管理
@@ -1134,14 +1059,7 @@ function bindFlow() {
         rd[col] = inp.value.trim();
         scheduleSave();
         const i = SCAN_COLS.indexOf(col);
-        if (col === 'endTime' && inp.value.trim()) {
-          // endTime 录完 → 自动追加新行并跳到新行 tracking
-          setTimeout(() => {
-            const r = addRow(false);
-            document.getElementById('tableBody').appendChild(r._el);
-            jumpTo(r.id, SCAN_COLS[0]);
-          }, 60);
-        } else if (i < SCAN_COLS.length - 1) {
+        if (i < SCAN_COLS.length - 1) {
           const next = SCAN_COLS[i + 1];
           if (next) setTimeout(() => jumpTo(rd.id, next), 40);
         }
@@ -1194,37 +1112,6 @@ function bindFlow() {
   });
 }
 
-// ═══════════════════════════════════════════
-// 输入校验
-// ═══════════════════════════════════════════
-const TIME_RE = /^\d{1,2}:\d{2}(:\d{2})?$/;
-const TRACK_RE = /^[A-Za-z0-9\-]{3,}$/;
-
-function validateInput(rd, col) {
-  const inp = rd._el?.querySelector(`input[data-col="${col}"]`);
-  if (!inp) return;
-  inp.classList.remove('error-input');
-  const v = inp.value.trim();
-  if (!v) return;
-  if (col === 'startTime' || col === 'endTime') {
-    if (!TIME_RE.test(v)) { inp.classList.add('error-input'); return; }
-    const [h, m] = v.split(':').map(Number);
-    if (h > 23 || m > 59) { inp.classList.add('error-input'); }
-  }
-  if (col === 'tracking' && !TRACK_RE.test(v)) { inp.classList.add('error-input'); }
-}
-
-function bindValidation() {
-  const COLS = [...SCAN_COLS, 'accessory', 'extracted'];
-  rows.forEach(rd => {
-    COLS.forEach(col => {
-      const inp = rd._el?.querySelector(`input[data-col="${col}"]`);
-      if (!inp) return;
-      inp.addEventListener('blur', () => validateInput(rd, col));
-    });
-  });
-}
-
 function build() {
   const tb = document.getElementById('tableBody');
   tb.innerHTML = '';
@@ -1235,7 +1122,6 @@ function build() {
     tb.appendChild(r._el);
   }
   bindFlow();
-  bindValidation();
   updateCount();
 }
 
@@ -1245,7 +1131,6 @@ function addRow() {
   rows.push(r);
   tb.appendChild(r._el);
   bindFlow();
-  bindValidation();
   updateCount();
   jumpTo(r.id, 'tracking');
 }
@@ -1319,14 +1204,9 @@ async function submitData() {
 
   const btn = document.getElementById('submitBtn');
 
-  // 防重复提交锁
-  if (btn.disabled || btn.dataset.locked === '1') return;
-  btn.dataset.locked = '1';
-
   // 员工姓名必填校验
   const coworkerEl = document.getElementById('coworkerInput');
   if (!coworkerEl.value.trim()) {
-    btn.dataset.locked = '';
     alert('⚠️ 请先填写员工姓名再提交！');
     coworkerEl.focus();
     return;
@@ -1408,7 +1288,6 @@ async function submitData() {
     alert('提交失败: ' + msg);
   } finally {
     btn.disabled = false;
-    btn.dataset.locked = '';
     btn.textContent = '📤 提交数据';
   }
 }
@@ -1519,99 +1398,7 @@ function getYesterdayStr() {
   return `${y}-${m}-${d}`;
 }
 
-// ═══════════════════════════════════════════
-// 历史记录查看器
-// ═══════════════════════════════════════════
-function openHistory() {
-  if (!currentUser) { alert('⚠️ 请先登录！'); return; }
-  const modal = document.getElementById('historyModal');
-  if (!modal) return;
-  modal.classList.add('show');
-  document.getElementById('histFilterDate').value = getYesterdayStr();
-  loadHistory();
-}
-
-async function loadHistory() {
-  const list = document.getElementById('histList');
-  const filterDate = document.getElementById('histFilterDate').value;
-  list.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">⏳ 加载中…</div>';
-
-  try {
-    const idToken = await auth.currentUser.getIdToken();
-    const snap = await fetch(FIREBASE_URL + 'submissions.json?auth=' + idToken + '&orderBy="_submittedAt"', {
-      headers: { 'Content-Type': 'application/json' }
-    }).then(r => r.json());
-
-    if (!snap || typeof snap !== 'object') { list.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">暂无记录</div>'; return; }
-
-    const entries = Object.entries(snap).filter(([k, v]) => v && v.rows && v.rows.length > 0);
-    const filtered = filterDate
-      ? entries.filter(([k, v]) => v.rows.some(r => r.date === filterDate))
-      : entries;
-
-    if (filtered.length === 0) {
-      list.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">无匹配记录</div>';
-      return;
-    }
-
-    list.innerHTML = filtered.map(([key, v]) => {
-      const ts = v._submittedAt ? new Date(v._submittedAt).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) : '—';
-      const rows = Array.isArray(v.rows) ? v.rows : [];
-      const totalRows = rows.length;
-      const hasErrors = rows.some(r => {
-        const spent = r._spent || '';
-        return spent === '异常' || (r.startTime && r.endTime && !spent);
-      });
-      return `<div class="hist-item" onclick="toggleHistDetail('${key}')">
-        <div class="hist-summary">
-          <span class="hist-time">${ts}</span>
-          <span class="hist-rows">${totalRows} 条明细</span>
-          <span class="hist-email">${v.submittedBy?.email || '—'}</span>
-          ${hasErrors ? '<span class="hist-warn">⚠ 含异常</span>' : ''}
-        </div>
-        <div class="hist-detail" id="hd-${key}" style="display:none">
-          <table class="hist-table"><thead><tr><th>#</th><th>Tracking</th><th>SKU</th><th>开始</th><th>结束</th><th>工时</th><th>结果</th><th>辅料</th><th>配件</th></tr></thead><tbody>
-          ${rows.map((r, i) => `<tr><td>${i+1}</td><td>${r.tracking||''}</td><td>${r.sku||''}</td><td>${r.startTime||''}</td><td>${r.endTime||''}</td><td>${r._spent||calcSpent(r)||''}</td><td>${r.status||r.result||''}</td><td>${r.accessory||''}</td><td>${r.extracted||''}</td></tr>`).join('')}
-          </tbody></table>
-          <div class="hist-actions">
-            <button class="hist-del-btn" onclick="event.stopPropagation(); deleteRecord('${key}')">🗑 删除此条</button>
-          </div>
-        </div>
-      </div>`;
-    }).join('');
-  } catch (e) {
-    list.innerHTML = '<div style="text-align:center;color:#dc2626;padding:20px;">加载失败: ' + e.message + '</div>';
-  }
-}
-
-function toggleHistDetail(key) {
-  const el = document.getElementById('hd-' + key);
-  if (!el) return;
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
-}
-
-async function deleteRecord(key) {
-  if (!confirm('确定删除这条记录？此操作不可恢复。')) return;
-  try {
-    const idToken = await auth.currentUser.getIdToken();
-    const resp = await fetch(FIREBASE_URL + 'submissions/' + key + '.json?auth=' + idToken, {
-      method: 'DELETE'
-    });
-    if (resp.ok) {
-      showToast('已删除', false);
-      loadHistory();
-    } else {
-      alert('删除失败: HTTP ' + resp.status);
-    }
-  } catch (e) { alert('删除失败: ' + e.message); }
-}
-
-function closeHistory() {
-  document.getElementById('historyModal')?.classList.remove('show');
-}
-
 document.getElementById('downloadBtn').addEventListener('click', downloadData);
-document.getElementById('historyBtn')?.addEventListener('click', openHistory);
 
 window.addEventListener('load', () => {
   document.getElementById('dateInput').value = nyDateStr();
@@ -1622,20 +1409,5 @@ window.addEventListener('load', () => {
   // 草稿恢复提示（登录前不检测草稿，登录成功后再检测）
 });
 </script>
-
-<!-- 历史记录查看器 -->
-<div id="historyModal" class="modal-overlay" onclick="if(event.target===this)closeHistory()">
-  <div class="modal-box">
-    <div class="modal-header">
-      <span>📋 历史记录</span>
-      <button class="modal-close" onclick="closeHistory()">✕</button>
-    </div>
-    <div class="modal-toolbar">
-      <label>筛选日期：<input type="date" id="histFilterDate"></label>
-      <button id="histReloadBtn" onclick="loadHistory()">🔄 刷新</button>
-    </div>
-    <div id="histList" class="hist-list"></div>
-  </div>
-</div>
 </body>
 </html>
