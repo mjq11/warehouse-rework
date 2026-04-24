@@ -608,25 +608,25 @@
 <div class="page-header">
   <div>
     <div class="title">仓库拆检登记系统</div>
-    <div class="subtitle">WAREHOUSE REWORK TRACKING SYSTEM</div>
+    <div class="subtitle">Warehouse Rework Tracking System</div>
   </div>
   <div class="header-meta">
     <div class="header-field">
       <span class="lbl">COWORKER</span>
-      <input type="text" id="coworkerInput" placeholder="扫码录入" autocomplete="off">
+      <input type="text" id="coworkerInput" placeholder="扫码录入 · Scan to input" autocomplete="off">
     </div>
     <div class="header-field">
       <span class="lbl">DATE (PT)</span>
       <input type="text" id="dateInput" readonly tabindex="-1">
     </div>
-    <button class="logout-btn" id="logoutBtn" onclick="handleLogout()">退出登录</button>
+    <button class="logout-btn" id="logoutBtn" onclick="handleLogout()">退出 · Logout</button>
   </div>
 </div>
 
 <!-- 二维码区（右侧对齐） -->
 <div class="qr-block">
   <div class="qr-info-block">
-    <span class="qr-label">时间二维码 · 每60秒自动刷新</span>
+    <span class="qr-label">时间二维码 · Time QR (auto-refresh 60s)</span>
     <span class="qr-time" id="qrTime">--:--:--</span>
     <span class="qr-note" id="qrDate">--</span>
   </div>
@@ -636,15 +636,15 @@
 <!-- 提交按钮行 -->
 <div class="submit-row">
   <input type="date" id="exportDateInput" class="export-date-input">
-  <button id="downloadBtn">📥 下载数据</button>
-  <button id="submitBtn">📤 提交数据</button>
+  <button id="downloadBtn">📥 下载数据 · Download</button>
+  <button id="submitBtn">📤 提交数据 · Submit</button>
 </div>
 
 <!-- 区段标签（严格对应列分组：A-D / E-I / J-K） -->
 <div class="section-labels-row">
-  <div class="sec-badge blue">订单基础信息</div>
-  <div class="sec-badge orange">拆检结果及工时</div>
-  <div class="sec-badge green">产生费用</div>
+  <div class="sec-badge blue">订单基础信息 · Order Info</div>
+  <div class="sec-badge orange">拆检结果及工时 · Rework Details</div>
+  <div class="sec-badge green">产生费用 · Costs</div>
 </div>
 
 <!-- 数据表格 -->
@@ -655,6 +655,7 @@
         <!-- A: 序号 — 订单基础信息 -->
         <th class="row-num">
           <span class="cn">序号</span>
+          <span class="en">#</span>
         </th>
         <!-- B-D: 订单基础信息 -->
         <th class="col-b">
@@ -708,7 +709,7 @@
 <!-- 底部栏 -->
 <div class="bottom-bar">
   <span class="count-info" id="countInfo"></span>
-  <button class="add-btn" id="addRowBtn">+ 添加行</button>
+  <button class="add-btn" id="addRowBtn">+ 添加行 · Add Row</button>
 </div>
 
 <!-- Firebase SDK -->
@@ -792,7 +793,7 @@ async function handleLogout() {
       location.reload();
     } catch (e) {
       console.log('signOut error:', e);
-      alert('退出失败：' + e.message);
+      alert('退出失败 · Logout failed: ' + e.message);
     }
   } else {
     console.log('confirm returned false or blocked');
@@ -881,7 +882,7 @@ function calcSpent(rd) {
     return p[0]*60 + p[1];
   };
   const diff = toMin(e) - toMin(s);
-  if (diff <= 0) return '异常';
+  if (diff <= 0) return '异常 · ERR';
   const h = Math.floor(diff / 60);
   const m = diff % 60;
   if (h > 0) return `${h}h${m}m`;
@@ -944,7 +945,7 @@ function checkDraftOnLoad() {
   const draft = loadDraft();
   if (!draft || !draft.rows || draft.rows.length === 0) return;
   const ageMin = Math.round((Date.now() - draft.ts) / 60000);
-  const msg = `发现 ${draft.rows.length} 行未提交的草稿（${ageMin}分钟前保存）\n\n点击"确定"恢复草稿，或"取消"从头开始。`;
+  const msg = `Found ${draft.rows.length} unsubmitted rows (saved ${ageMin}min ago)\n发现 ${draft.rows.length} 行未提交的草稿（${ageMin}分钟前保存）\n\nPress OK to restore draft / 点击"确定"恢复草稿`;
   if (!confirm(msg)) { clearDraft(); return; }
   // 重建对应行数
   while (rows.length < draft.rows.length) addRow(false);
@@ -1139,7 +1140,7 @@ function updateCount() {
   const filled = rows.filter(r => r.tracking).length;
   const extra  = rows.length - ROW_INIT;
   document.getElementById('countInfo').textContent =
-    `已录入 ${filled} / ${rows.length} 行${extra ? `（含 ${extra} 行额外）` : ''}`;
+    `${filled} / ${rows.length} 行${extra ? `（含 ${extra} 行额外 · +${extra} extra` : ''} · Rows filled`;
 }
 
 document.getElementById('addRowBtn').addEventListener('click', addRow);
@@ -1207,7 +1208,7 @@ async function submitData() {
   // 员工姓名必填校验
   const coworkerEl = document.getElementById('coworkerInput');
   if (!coworkerEl.value.trim()) {
-    alert('⚠️ 请先填写员工姓名再提交！');
+    alert('⚠️ 请先填写员工姓名再提交！\nPlease enter coworker name before submitting.');
     coworkerEl.focus();
     return;
   }
@@ -1225,7 +1226,7 @@ async function submitData() {
   }
 
   btn.disabled = true;
-  btn.textContent = '提交中...';
+  btn.textContent = '提交中... · Submitting';
 
   try {
     // 用时间戳作 key，自动去重
@@ -1251,13 +1252,13 @@ async function submitData() {
 
     if (!response.ok) {
       const text = await response.text().catch(() => '');
-      alert('提交失败: HTTP ' + response.status + ' ' + response.statusText + '\n' + text.substring(0, 200));
+      alert('提交失败 · Submit failed: HTTP ' + response.status + ' ' + response.statusText + '\n' + text.substring(0, 200));
       return;
     }
 
     const result = await response.json();
     if (result.name) {
-      alert('✅ 提交成功！数据已保存');
+      alert('✅ 提交成功！数据已保存\nSubmitted successfully!');
       clearDraft();
       // 清空已提交的数据
       // 保留拆检日期，只清空其他字段
@@ -1278,17 +1279,17 @@ async function submitData() {
       });
       updateCount();
     } else {
-      alert('提交失败: ' + JSON.stringify(result));
+      alert('提交失败 · Submit failed: ' + JSON.stringify(result));
     }
   } catch (e) {
     let msg = e.message;
     if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network')) {
       msg = '网络错误，请检查网络连接';
     }
-    alert('提交失败: ' + msg);
+    alert('提交失败 · Submit failed: ' + msg);
   } finally {
     btn.disabled = false;
-    btn.textContent = '📤 提交数据';
+    btn.textContent = '📤 提交数据 · Submit';
   }
 }
 
@@ -1300,7 +1301,7 @@ document.getElementById('submitBtn').addEventListener('click', submitData);
 async function downloadData() {
   const btn = document.getElementById('downloadBtn');
   btn.disabled = true;
-  btn.textContent = '⏳ 加载中…';
+  btn.textContent = '⏳ 加载中... · Loading';
 
   try {
     // 取日期选择器的值，默认昨天
@@ -1333,7 +1334,7 @@ async function downloadData() {
         const rowsArr = Array.isArray(rowsRaw) ? rowsRaw : (rowsRaw.rows || []);
         return rowsArr.map(r => r.date).filter(Boolean);
       }))].join(', ');
-      alert(`（${selectedDate}）暂无提交\n已有拆检日期：${existingDates}`);
+      alert(`（${selectedDate}）暂无提交 · No data for this date\n已有拆检日期：${existingDates}`);
       return;
     }
 
@@ -1373,7 +1374,7 @@ async function downloadData() {
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet([
-      ['序号','退货物流单号','实收SKU','实收数量','拆检日期','拆检开始时间','拆检结束时间','拆检工时','拆检结果','包装辅料消耗SKU','入库配件拆检SKU','员工姓名'],
+      ['#','Return Tracking','Received SKU','Received Qty','Rework Date','Start Time','Finish Time','Time Spent','Status','Accessory SKU','Extracted SKU','Coworker'],
       ...allRows
     ]);
     ws['!cols'] = [
@@ -1382,13 +1383,13 @@ async function downloadData() {
       {wch:22},{wch:22},{wch:12},{wch:10}
     ];
     XLSX.utils.book_append_sheet(wb, ws, selectedDate);
-    XLSX.writeFile(wb, `拆检记录_${selectedDate}.xlsx`);
-    alert(`✅ 导出 ${allRows.length} 条记录`);
+    XLSX.writeFile(wb, `Rework_${selectedDate}.xlsx`);
+    alert(`✅ 导出 ${allRows.length} 条记录 · ${allRows.length} records exported`);
   } catch (e) {
-    alert('下载失败：' + e.message);
+    alert('下载失败 · Download failed: ' + e.message);
   } finally {
     btn.disabled = false;
-    btn.textContent = '📥 下载数据';
+    btn.textContent = '📥 下载数据 · Download';
   }
 }
 
