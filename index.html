@@ -621,7 +621,7 @@
   <div class="header-meta">
     <div class="header-field">
       <span class="lbl">COWORKER</span>
-      <input type="text" id="coworkerInput" placeholder="扫码录入" autocomplete="off">
+      <input type="text" id="coworkerInput" placeholder="扫码录入 · Scan to input" autocomplete="off">
     </div>
     <div class="header-field">
       <span class="lbl">DATE (PT)</span>
@@ -1024,12 +1024,12 @@ function makeRow(isPre) {
 
   tr.innerHTML = `
     <td class="row-num">${id}</td>
-    <td class="col-b"><input type="text" data-col="tracking"  data-row="${id}" autocomplete="off"></td>
-    <td><input type="text" data-col="sku"         data-row="${id}" autocomplete="off"></td>
-    <td><input type="text" data-col="qty"         data-row="${id}" autocomplete="off" value="1"></td>
+    <td class="col-b"><input type="text" data-col="tracking"  data-row="${id}" placeholder="扫码 · Scan" autocomplete="off"></td>
+    <td><input type="text" data-col="sku"         data-row="${id}" placeholder="扫码 · Scan" autocomplete="off"></td>
+    <td><input type="text" data-col="qty"         data-row="${id}" placeholder="扫码 · Scan" autocomplete="off" value="1"></td>
     <td class="col-e"><input type="text" data-col="date"       data-row="${id}" readonly tabindex="-1"></td>
-    <td><input type="text" data-col="startTime"   data-row="${id}" autocomplete="off"></td>
-    <td><input type="text" data-col="endTime"     data-row="${id}" autocomplete="off"></td>
+    <td><input type="text" data-col="startTime"   data-row="${id}" placeholder="扫码 · Scan" autocomplete="off"></td>
+    <td><input type="text" data-col="endTime"     data-row="${id}" placeholder="扫码 · Scan" autocomplete="off"></td>
     <td data-col="spent" data-row="${id}"></td>
     <td class="status-cell" data-col="status" data-row="${id}">
       <select data-col="status" data-row="${id}">
@@ -1040,8 +1040,8 @@ function makeRow(isPre) {
         <option value="NA">NA</option>
       </select>
     </td>
-    <td class="col-j"><input type="text" data-col="accessory" data-row="${id}" class="accum-input"></td>
-    <td><input type="text" data-col="extracted" data-row="${id}" class="accum-input"></td>
+    <td class="col-j"><input type="text" data-col="accessory" data-row="${id}" placeholder="扫码累加 · Append" class="accum-input"></td>
+    <td><input type="text" data-col="extracted" data-row="${id}" placeholder="扫码累加 · Append" class="accum-input"></td>
   `;
 
   // 默认日期 & 实收数量
