@@ -1097,11 +1097,6 @@ function bindFlow() {
       inp.addEventListener('input', () => {
         rd[col] = inp.value.trim();
         scheduleSave();
-        const i = SCAN_COLS.indexOf(col);
-        if (i < SCAN_COLS.length - 1) {
-          const next = SCAN_COLS[i + 1];
-          if (next) setTimeout(() => jumpTo(rd.id, next), 40);
-        }
       });
       inp.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
