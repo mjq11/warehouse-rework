@@ -1094,9 +1094,18 @@ function bindFlow() {
     rows.forEach(rd => {
       const inp = rd._el.querySelector(`input[data-col="${col}"]`);
       if (!inp) return;
+      // 扫码枪一次性输入完整条码，等输入停止150ms后自动跳下一格
+      // 这样含连字符的条码（1-2-3）不会被拆散
       inp.addEventListener('input', () => {
         rd[col] = inp.value.trim();
         scheduleSave();
+        clearTimeout(inp._scanTimer);
+        inp._scanTimer = setTimeout(() => {
+          const i = SCAN_COLS.indexOf(col);
+          if (i < SCAN_COLS.length - 1) {
+            jumpTo(rd.id, SCAN_COLS[i + 1]);
+          }
+        }, 150);
       });
       inp.addEventListener('keydown', e => {
         if (e.key === 'Enter') {
