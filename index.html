@@ -1024,7 +1024,7 @@ function makeRow(isPre) {
 
   tr.innerHTML = `
     <td class="row-num">${id}</td>
-    <td class="col-b"><input type="text" data-col="tracking"  data-row="${id}" placeholder="扫码 · Scan" autocomplete="off"></td>
+    <td class="col-b"><input type="text" data-col="tracking"  data-row="${id}" placeholder="扫码 · Scan" autocomplete="off" maxlength="999"></td>
     <td><input type="text" data-col="sku"         data-row="${id}" placeholder="扫码 · Scan" autocomplete="off"></td>
     <td><input type="text" data-col="qty"         data-row="${id}" placeholder="扫码 · Scan" autocomplete="off" value="1"></td>
     <td class="col-e"><input type="text" data-col="date"       data-row="${id}" readonly tabindex="-1"></td>
@@ -1089,38 +1089,7 @@ function jumpTo(rowId, col) {
 }
 
 function bindFlow() {
-  // 扫码流转：tracking → sku → qty → startTime → endTime
-  SCAN_COLS.forEach(col => {
-    rows.forEach(rd => {
-      const inp = rd._el.querySelector(`input[data-col="${col}"]`);
-      if (!inp) return;
-      // 扫码枪一次性输入完整条码，等输入停止150ms后自动跳下一格
-      // 这样含连字符的条码（1-2-3）不会被拆散
-      inp.addEventListener('input', () => {
-        rd[col] = inp.value.trim();
-        scheduleSave();
-        clearTimeout(inp._scanTimer);
-        inp._scanTimer = setTimeout(() => {
-          const i = SCAN_COLS.indexOf(col);
-          if (i < SCAN_COLS.length - 1) {
-            jumpTo(rd.id, SCAN_COLS[i + 1]);
-          }
-        }, 150);
-      });
-      inp.addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          const i = SCAN_COLS.indexOf(col);
-          if (i < SCAN_COLS.length - 1) {
-            jumpTo(rd.id, SCAN_COLS[i + 1]);
-          } else {
-            inp.blur();
-          }
-        }
-      });
-    });
-  });
-
+  // 已取消所有字段的自动跳转功能
   // 累加扫码：包装辅料 / 入库配件（扫码累加，不跳下一行）
   const ACCUM_COLS = ['accessory', 'extracted'];
   ACCUM_COLS.forEach(col => {
