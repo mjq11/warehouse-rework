@@ -1316,9 +1316,9 @@ async function downloadData() {
   btn.textContent = '⏳ 加载中... · Loading';
 
   try {
-    // 取日期选择器的值，默认昨天
-    const dateInput = document.getElementById('exportDateInput');
-    const selectedDate = dateInput.value || getYesterdayStr();
+    // 取日期范围选择器的值，默认昨天
+    const startDate = document.getElementById('exportDateStart').value || getYesterdayStr();
+    const endDate = document.getElementById('exportDateEnd').value || getYesterdayStr();
 
     const downloadIdToken = currentUser ? await auth.currentUser.getIdToken() : null;
     const downloadAuth = downloadIdToken ? '?auth=' + downloadIdToken : '';
@@ -1329,13 +1329,17 @@ async function downloadData() {
     try { allData = JSON.parse(raw); } catch(e) { throw new Error('JSON解析失败: ' + raw.substring(0,100)); }
     if (!allData || typeof allData !== 'object') return;
 
-    // 过滤：按拆检日期（r.date，美西时间格式如 2026-04-20）匹配 selectedDate
+    // 取日期范围选择器的值，默认昨天
+    const startDate = document.getElementById('exportDateStart').value || getYesterdayStr();
+    const endDate = document.getElementById('exportDateEnd').value || getYesterdayStr();
+
+    // 过滤：按拆检日期（r.date，美西时间格式如 2026-04-20）在 startDate ~ endDate 范围内
     const targetEntries = Object.entries(allData)
       .filter(([, item]) => {
         if (!item || !item.rows) return false;
         const rowsRaw = item.rows;
         const rowsArr = Array.isArray(rowsRaw) ? rowsRaw : (rowsRaw.rows || []);
-        return rowsArr.some(r => r.date === selectedDate);
+        return rowsArr.some(r => r.date >= startDate && r.date <= endDate);
       })
       .sort((a, b) => (a[1]._submittedAt || 0) - (b[1]._submittedAt || 0));
 
@@ -1346,7 +1350,7 @@ async function downloadData() {
         const rowsArr = Array.isArray(rowsRaw) ? rowsRaw : (rowsRaw.rows || []);
         return rowsArr.map(r => r.date).filter(Boolean);
       }))].join(', ');
-      alert(`（${selectedDate}）暂无提交 · No data for this date\n已有拆检日期：${existingDates}`);
+      alert(`（${startDate} ~ ${endDate}）暂无提交 · No data for this range\n已有拆检日期：${existingDates}`);
       return;
     }
 
@@ -1357,7 +1361,7 @@ async function downloadData() {
       const rowsRaw = item.rows || [];
       const rowsArr = Array.isArray(rowsRaw) ? rowsRaw : (rowsRaw.rows || []);
       for (const r of rowsArr) {
-        if (r.date !== selectedDate) continue;
+        if (r.date < startDate || r.date > endDate) continue;
         let spentVal = r.spent || '';
         if (!spentVal && r.startTime && r.endTime) {
           const toMin = t => { const p = t.split(':').map(Number); return p[0]*60 + p[1]; };
@@ -1394,7 +1398,7 @@ async function downloadData() {
       {wch:10},{wch:10},{wch:8},{wch:12},
       {wch:22},{wch:22},{wch:12},{wch:10}
     ];
-    XLSX.utils.book_append_sheet(wb, ws, selectedDate);
+    XLSX.utils.book_append_sheet(wb, ws, `Rework_${startDate}_${endDate}`);
     XLSX.writeFile(wb, `Rework_${selectedDate}.xlsx`);
     alert(`✅ 导出 ${allRows.length} 条记录 · ${allRows.length} records exported`);
   } catch (e) {
@@ -1415,7 +1419,8 @@ document.getElementById('downloadBtn').addEventListener('click', downloadData);
 
 window.addEventListener('load', () => {
   document.getElementById('dateInput').value = nyDateStr();
-  document.getElementById('exportDateInput').value = getYesterdayStr();
+  document.getElementById('exportDateStart').value = getYesterdayStr();
+  document.getElementById('exportDateEnd').value = getYesterdayStr();
   build();
   startQR();
   // 不再自动聚焦 coworkerInput，等登录后再处理
