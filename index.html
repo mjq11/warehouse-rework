@@ -1397,7 +1397,7 @@ async function downloadData() {
       {wch:22},{wch:22},{wch:12},{wch:10}
     ];
     XLSX.utils.book_append_sheet(wb, ws, `Rework_${startDate}_${endDate}`);
-    XLSX.writeFile(wb, `Rework_${selectedDate}.xlsx`);
+    XLSX.writeFile(wb, `Rework_${startDate}_${endDate}.xlsx`);
     alert(`✅ 导出 ${allRows.length} 条记录 · ${allRows.length} records exported`);
   } catch (e) {
     alert('下载失败 · Download failed: ' + e.message);
