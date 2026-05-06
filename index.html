@@ -1331,10 +1331,6 @@ async function downloadData() {
     try { allData = JSON.parse(raw); } catch(e) { throw new Error('JSON解析失败: ' + raw.substring(0,100)); }
     if (!allData || typeof allData !== 'object') return;
 
-    // 取日期范围选择器的值，默认昨天
-    const startDate = document.getElementById('exportDateStart').value || getYesterdayStr();
-    const endDate = document.getElementById('exportDateEnd').value || getYesterdayStr();
-
     // 过滤：按拆检日期（r.date，美西时间格式如 2026-04-20）在 startDate ~ endDate 范围内
     const targetEntries = Object.entries(allData)
       .filter(([, item]) => {
