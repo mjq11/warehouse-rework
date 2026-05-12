@@ -681,17 +681,17 @@
   <table id="dataTable">
   <colgroup>
     <col style="width:38px">
-    <col>
-    <col>
-    <col>
-    <col>
-    <col>
-    <col>
-    <col>
-    <col>
-    <col>
-    <col>
-    <col>
+    <col style="width:120px">
+    <col style="width:90px">
+    <col style="width:60px">
+    <col style="width:90px">
+    <col style="width:80px">
+    <col style="width:80px">
+    <col style="width:60px">
+    <col style="width:80px">
+    <col style="width:120px">
+    <col style="width:120px">
+    <col style="width:100px">
   </colgroup>
     <thead>
       <tr>
@@ -1402,9 +1402,9 @@ async function downloadData() {
       ...allRows
     ]);
     ws['!cols'] = [
-      {wch:12},{wch:22},{wch:18},{wch:6},
-      {wch:10},{wch:10},{wch:8},{wch:12},
-      {wch:22},{wch:22},{wch:15},{wch:10}
+      {wch:5},{wch:22},{wch:18},{wch:6},
+      {wch:12},{wch:10},{wch:10},{wch:8},
+      {wch:10},{wch:22},{wch:22},{wch:15},{wch:10}
     ];
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
     XLSX.writeFile(wb, `Rework_${startDate}_${endDate}.xlsx`);
