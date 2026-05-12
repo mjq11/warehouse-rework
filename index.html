@@ -650,11 +650,12 @@
   </div>
 </div>
 
-<!-- 区段标签（严格对应列分组：A-D / E-I / J-K） -->
+<!-- 区段标签（严格对应列分组：A-D / E-I / J-K / L） -->
 <div class="section-labels-row">
   <table>
   <colgroup>
     <col style="width:38px">
+    <col>
     <col>
     <col>
     <col>
@@ -671,6 +672,7 @@
     <td class="col-b" colspan="3"><div class="sec-badge blue">订单基础信息 · Order Info</div></td>
     <td class="col-e" colspan="5"><div class="sec-badge orange">拆检结果及工时 · Rework Details</div></td>
     <td class="col-j" colspan="2"><div class="sec-badge green">产生费用 · Costs</div></td>
+    <td><div class="sec-badge" style="background:#6b7280">备注 · Remark</div></td>
   </tr></table>
 </div>
 
@@ -679,6 +681,7 @@
   <table id="dataTable">
   <colgroup>
     <col style="width:38px">
+    <col>
     <col>
     <col>
     <col>
@@ -739,6 +742,10 @@
         <th>
           <span class="cn">入库配件拆检SKU</span>
           <span class="en">extracted SKU</span>
+        </th>
+        <th>
+          <span class="cn">备注</span>
+          <span class="en">Remark</span>
         </th>
       </tr>
     </thead>
@@ -1017,7 +1024,7 @@ function makeRow(isPre) {
   const id = rowCount;
   const rd = {
     id, tracking:'', sku:'', qty:'1', date: nyDateStr(),
-    startTime:'', endTime:'', accessory:'', extracted:'', status: '',
+    startTime:'', endTime:'', accessory:'', extracted:'', status:'', remark:'',
     _el: null
   };
 
@@ -1045,6 +1052,7 @@ function makeRow(isPre) {
     </td>
     <td class="col-j"><input type="text" data-col="accessory" data-row="${id}" placeholder="扫码累加 · Append" class="accum-input"></td>
     <td><input type="text" data-col="extracted" data-row="${id}" placeholder="扫码累加 · Append" class="accum-input"></td>
+    <td><input type="text" data-col="remark" data-row="${id}" placeholder="备注 · Remark" autocomplete="off"></td>
   `;
 
   // 默认日期 & 实收数量
@@ -1202,6 +1210,7 @@ function collectData() {
     result: rd.status || '',
     j: rd.accessory || '',
     k: rd.extracted || '',
+    remark: rd.remark || '',
     coworker: coworker,
     submitTime: submitTime
   }));
@@ -1381,6 +1390,7 @@ async function downloadData() {
           r.result || '',
           r.j || '',
           r.k || '',
+          r.remark || '',
           r.coworker || ''
         ]);
       }
@@ -1388,13 +1398,13 @@ async function downloadData() {
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet([
-      ['#','Return Tracking','Received SKU','Received Qty','Rework Date','Start Time','Finish Time','Time Spent','Status','Accessory SKU','Extracted SKU','Coworker'],
+      ['#','Return Tracking','Received SKU','Received Qty','Rework Date','Start Time','Finish Time','Time Spent','Status','Accessory SKU','Extracted SKU','Remark','Coworker'],
       ...allRows
     ]);
     ws['!cols'] = [
       {wch:12},{wch:22},{wch:18},{wch:6},
       {wch:10},{wch:10},{wch:8},{wch:12},
-      {wch:22},{wch:22},{wch:12},{wch:10}
+      {wch:22},{wch:22},{wch:15},{wch:10}
     ];
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
     XLSX.writeFile(wb, `Rework_${startDate}_${endDate}.xlsx`);
