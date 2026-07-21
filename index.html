@@ -666,12 +666,14 @@
     <col>
     <col>
     <col>
+    <col>
   </colgroup>
   <tr>
     <td class="row-num"></td>
     <td class="col-b" colspan="3"><div class="sec-badge blue">订单基础信息 · Order Info</div></td>
     <td class="col-e" colspan="5"><div class="sec-badge orange">拆检结果及工时 · Rework Details</div></td>
     <td class="col-j" colspan="2"><div class="sec-badge green">产生费用 · Costs</div></td>
+    <td><div class="sec-badge" style="background:#64748b">Clearance</div></td>
     <td><div class="sec-badge" style="background:#6b7280">备注 · Remark</div></td>
   </tr></table>
 </div>
@@ -691,6 +693,7 @@
     <col style="width:80px">
     <col style="width:120px">
     <col style="width:120px">
+    <col style="width:70px">
     <col style="width:100px">
   </colgroup>
     <thead>
@@ -742,6 +745,10 @@
         <th>
           <span class="cn">入库配件拆检SKU</span>
           <span class="en">extracted SKU</span>
+        </th>
+        <th>
+          <span class="cn">Clearance</span>
+          <span class="en">Clearance</span>
         </th>
         <th>
           <span class="cn">备注</span>
@@ -961,7 +968,7 @@ function startQR() {
 
 // ── 自动保存（防止刷新数据丢失） ──
 const SAVE_KEY = 'wr_draft_v1';
-const SAVE_COLS = ['tracking','sku','qty','startTime','endTime','accessory','extracted','status'];
+const SAVE_COLS = ['tracking','sku','qty','startTime','endTime','accessory','extracted','status','clearance','remark'];
 
 function saveDraft() {
   const data = rows.map(rd => {
@@ -1024,7 +1031,7 @@ function makeRow(isPre) {
   const id = rowCount;
   const rd = {
     id, tracking:'', sku:'', qty:'1', date: nyDateStr(),
-    startTime:'', endTime:'', accessory:'', extracted:'', status:'', remark:'',
+    startTime:'', endTime:'', accessory:'', extracted:'', status:'', clearance:'', remark:'',
     _el: null
   };
 
@@ -1052,6 +1059,12 @@ function makeRow(isPre) {
     </td>
     <td class="col-j"><input type="text" data-col="accessory" data-row="${id}" placeholder="扫码累加 · Append" class="accum-input"></td>
     <td><input type="text" data-col="extracted" data-row="${id}" placeholder="扫码累加 · Append" class="accum-input"></td>
+    <td class="status-cell" data-col="clearance" data-row="${id}">
+      <select data-col="clearance" data-row="${id}" aria-label="Clearance">
+        <option value="">—</option>
+        <option value="CLR">CLR</option>
+      </select>
+    </td>
     <td><input type="text" data-col="remark" data-row="${id}" placeholder="备注 · Remark" autocomplete="off"></td>
   `;
 
@@ -1210,6 +1223,7 @@ function collectData() {
     result: rd.status || '',
     j: rd.accessory || '',
     k: rd.extracted || '',
+    clearance: rd.clearance || '',
     remark: rd.remark || '',
     coworker: coworker,
     submitTime: submitTime
@@ -1288,7 +1302,7 @@ async function submitData() {
       const preservedDate = document.getElementById('dateInput').value;
       rows.forEach(rd => {
         rd.tracking = rd.sku = rd.qty = rd.startTime = rd.endTime =
-          rd.status = rd.accessory = rd.extracted = '';
+        rd.status = rd.accessory = rd.extracted = rd.clearance = rd.remark = '';
         rd._el.querySelectorAll('input').forEach(inp => {
           if (inp.dataset.col === 'date') {
             inp.value = preservedDate; // 保留拆检日期
@@ -1298,7 +1312,7 @@ async function submitData() {
           }
         });
         rd._el.querySelector('[data-col="spent"]').textContent = '';
-        rd._el.querySelector('select').value = '';
+        rd._el.querySelectorAll('select').forEach(sel => { sel.value = ''; });
       });
       updateCount();
     } else {
@@ -1390,6 +1404,7 @@ async function downloadData() {
           r.result || '',
           r.j || '',
           r.k || '',
+          r.clearance || '',
           r.remark || '',
           r.coworker || ''
         ]);
@@ -1398,13 +1413,13 @@ async function downloadData() {
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet([
-      ['#','Return Tracking','Received SKU','Received Qty','Rework Date','Start Time','Finish Time','Time Spent','Status','Accessory SKU','Extracted SKU','Remark','Coworker'],
+      ['#','Return Tracking','Received SKU','Received Qty','Rework Date','Start Time','Finish Time','Time Spent','Status','Accessory SKU','Extracted SKU','Clearance','Remark','Coworker'],
       ...allRows
     ]);
     ws['!cols'] = [
       {wch:5},{wch:22},{wch:18},{wch:6},
       {wch:12},{wch:10},{wch:10},{wch:8},
-      {wch:10},{wch:22},{wch:22},{wch:15},{wch:10}
+      {wch:10},{wch:22},{wch:22},{wch:12},{wch:15},{wch:10}
     ];
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
     XLSX.writeFile(wb, `Rework_${startDate}_${endDate}.xlsx`);
