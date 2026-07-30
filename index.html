@@ -373,7 +373,7 @@
       color: #3d5a80;
       font-weight: 600;
       text-align: center;
-      padding: 10px 6px;
+      padding: 10px 3px;
       border-bottom: 2px solid #d0d7e0;
       font-size: 11px;
       white-space: nowrap;
@@ -387,15 +387,24 @@
       font-size: 9.5px;
       color: #2c3e50;
       font-weight: 400;
-      margin-top: 2px;
+      margin-top: 4px;
+      line-height: 1.2;
+      white-space: nowrap;
     }
 
     thead th .en {
-      display: block;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      min-height: 28px;
       font-size: 12px;
       color: #9db0c8;
       font-weight: 700;
+      line-height: 1.15;
       letter-spacing: 0.3px;
+      white-space: normal;
+      overflow-wrap: normal;
+      word-break: normal;
     }
 
     tbody tr:hover { background: #f0f6ff; }
