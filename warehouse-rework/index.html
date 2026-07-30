@@ -532,46 +532,46 @@
         </th>
         <!-- B-D: 订单基础信息 -->
         <th class="col-b">
-          <span class="cn">退货物流单号</span>
           <span class="en">return tracking number</span>
+          <span class="cn">退货物流单号</span>
         </th>
         <th>
-          <span class="cn">实收SKU</span>
           <span class="en">Received SKU</span>
+          <span class="cn">实收SKU</span>
         </th>
         <th>
-          <span class="cn">实收数量</span>
           <span class="en">Received qty</span>
+          <span class="cn">实收数量</span>
         </th>
         <!-- E-I: 拆检结果及工时 -->
         <th class="col-e">
-          <span class="cn">拆检日期</span>
           <span class="en">Rework date</span>
+          <span class="cn">拆检日期</span>
         </th>
         <th>
-          <span class="cn">拆检开始时间</span>
           <span class="en">start time</span>
+          <span class="cn">拆检开始时间</span>
         </th>
         <th>
-          <span class="cn">拆检结束时间</span>
           <span class="en">finish time</span>
+          <span class="cn">拆检结束时间</span>
         </th>
         <th>
+          <span class="en">time spent(m)</span>
           <span class="cn">拆检工时</span>
-          <span class="en">time spent</span>
         </th>
         <th>
-          <span class="cn">拆检结果</span>
           <span class="en">status</span>
+          <span class="cn">拆检结果</span>
         </th>
         <!-- J-K: 产生费用 -->
         <th class="col-j">
-          <span class="cn">包装辅料消耗SKU</span>
           <span class="en">accessory used SKU</span>
+          <span class="cn">包装辅料消耗SKU</span>
         </th>
         <th>
-          <span class="cn">入库配件拆检SKU</span>
           <span class="en">extracted SKU</span>
+          <span class="cn">入库配件拆检SKU</span>
         </th>
       </tr>
     </thead>
@@ -632,11 +632,8 @@ function calcSpent(rd) {
     return p[0]*60 + p[1];
   };
   const diff = toMin(e) - toMin(s);
-  if (diff <= 0) return '异常';
-  const h = Math.floor(diff / 60);
-  const m = diff % 60;
-  if (h > 0) return `${h}h${m}m`;
-  return `${m}m`;
+  if (diff <= 0) return '异常 · ERR';
+  return String(diff);
 }
 
 // ── QR 码（Google Chart API，每 60 秒刷新，仅刷新图片 src） ──
