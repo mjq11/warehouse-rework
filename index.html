@@ -700,59 +700,59 @@
       <tr>
         <!-- A: 序号 — 订单基础信息 -->
         <th class="row-num">
-          <span class="cn">序号</span>
           <span class="en">#</span>
+          <span class="cn">序号</span>
         </th>
         <!-- B-D: 订单基础信息 -->
         <th class="col-b">
-          <span class="cn">退货物流单号</span>
           <span class="en">return tracking number</span>
+          <span class="cn">退货物流单号</span>
         </th>
         <th>
-          <span class="cn">实收SKU</span>
           <span class="en">Received SKU</span>
+          <span class="cn">实收SKU</span>
         </th>
         <th>
-          <span class="cn">实收数量</span>
           <span class="en">Received qty</span>
+          <span class="cn">实收数量</span>
         </th>
         <!-- E-I: 拆检结果及工时 -->
         <th class="col-e">
-          <span class="cn">拆检日期</span>
           <span class="en">Rework date</span>
+          <span class="cn">拆检日期</span>
         </th>
         <th>
-          <span class="cn">拆检开始时间</span>
           <span class="en">start time</span>
+          <span class="cn">拆检开始时间</span>
         </th>
         <th>
-          <span class="cn">拆检结束时间</span>
           <span class="en">finish time</span>
+          <span class="cn">拆检结束时间</span>
         </th>
         <th>
+          <span class="en">time spent(m)</span>
           <span class="cn">拆检工时</span>
-          <span class="en">time spent</span>
         </th>
         <th>
-          <span class="cn">拆检结果</span>
           <span class="en">status</span>
+          <span class="cn">拆检结果</span>
         </th>
         <!-- J-K: 产生费用 -->
         <th class="col-j">
-          <span class="cn">包装辅料消耗SKU</span>
           <span class="en">accessory used SKU</span>
+          <span class="cn">包装辅料消耗SKU</span>
         </th>
         <th>
-          <span class="cn">入库配件拆检SKU</span>
           <span class="en">extracted SKU</span>
+          <span class="cn">入库配件拆检SKU</span>
         </th>
         <th>
-          <span class="cn">Clearance</span>
           <span class="en">Clearance</span>
+          <span class="cn">Clearance</span>
         </th>
         <th>
-          <span class="cn">备注</span>
           <span class="en">Remark</span>
+          <span class="cn">备注</span>
         </th>
       </tr>
     </thead>
@@ -937,10 +937,7 @@ function calcSpent(rd) {
   };
   const diff = toMin(e) - toMin(s);
   if (diff <= 0) return '异常 · ERR';
-  const h = Math.floor(diff / 60);
-  const m = diff % 60;
-  if (h > 0) return `${h}h${m}m`;
-  return `${m}m`;
+  return String(diff);
 }
 
 // ── QR 码（Google Chart API，每 60 秒刷新，仅刷新图片 src） ──
@@ -1383,14 +1380,18 @@ async function downloadData() {
       const rowsArr = Array.isArray(rowsRaw) ? rowsRaw : (rowsRaw.rows || []);
       for (const r of rowsArr) {
         if (r.date < startDate || r.date > endDate) continue;
-        let spentVal = r.spent || '';
-        if (!spentVal && r.startTime && r.endTime) {
+        let spentVal = '';
+        if (r.startTime && r.endTime) {
           const toMin = t => { const p = t.split(':').map(Number); return p[0]*60 + p[1]; };
           const diff = toMin(r.endTime) - toMin(r.startTime);
-          if (diff > 0) {
-            const h = Math.floor(diff / 60), m = diff % 60;
-            spentVal = h > 0 ? `${h}h${m}m` : `${m}m`;
-          }
+          if (diff > 0) spentVal = String(diff);
+        } else if (r.spent !== undefined && r.spent !== null) {
+          const rawSpent = String(r.spent).trim();
+          const hourMinuteMatch = rawSpent.match(/^(\d+)h(\d+)m$/i);
+          const minuteMatch = rawSpent.match(/^(\d+)m$/i);
+          if (hourMinuteMatch) spentVal = String(Number(hourMinuteMatch[1]) * 60 + Number(hourMinuteMatch[2]));
+          else if (minuteMatch) spentVal = minuteMatch[1];
+          else if (/^\d+$/.test(rawSpent)) spentVal = rawSpent;
         }
         allRows.push([
           seq++,
@@ -1413,7 +1414,7 @@ async function downloadData() {
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.aoa_to_sheet([
-      ['#','Return Tracking','Received SKU','Received Qty','Rework Date','Start Time','Finish Time','Time Spent','Status','Accessory SKU','Extracted SKU','Clearance','Remark','Coworker'],
+      ['#','Return Tracking','Received SKU','Received Qty','Rework Date','Start Time','Finish Time','Time Spent(m)','Status','Accessory SKU','Extracted SKU','Clearance','Remark','Coworker'],
       ...allRows
     ]);
     ws['!cols'] = [
